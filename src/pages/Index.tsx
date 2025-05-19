@@ -1,249 +1,212 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
-import PropertyCard from "@/components/property/PropertyCard";
-import PropertyFilters from "@/components/property/PropertyFilters";
-import Layout from "@/components/layout/Layout";
-import Logo from "@/components/layout/Logo";
-import { useAuth } from "@/contexts/AuthContext";
-
-// Dummy data for property listings
-const dummyProperties = [
-  {
-    id: 1,
-    title: "Appartement lumineux au centre-ville",
-    address: "123 Rue de la République, Lyon",
-    price: 850,
-    area: 45,
-    rooms: 2,
-    type: "Appartement",
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=500&h=300"
-  },
-  {
-    id: 2,
-    title: "Studio moderne près de la gare",
-    address: "45 Avenue Jean Jaurès, Paris",
-    price: 650,
-    area: 30,
-    rooms: 1,
-    type: "Studio",
-    image: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=500&h=300"
-  },
-  {
-    id: 3,
-    title: "Maison avec jardin",
-    address: "8 Rue des Pins, Toulouse",
-    price: 1200,
-    area: 90,
-    rooms: 4,
-    type: "Maison",
-    image: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=500&h=300"
-  },
-  {
-    id: 4,
-    title: "Appartement rénové quartier historique",
-    address: "27 Rue Sainte-Catherine, Bordeaux",
-    price: 900,
-    area: 55,
-    rooms: 3,
-    type: "Appartement",
-    image: "https://images.unsplash.com/photo-1560448205-4d9b3e6bb6db?auto=format&fit=crop&w=500&h=300"
-  },
-  {
-    id: 5,
-    title: "Loft design industriel",
-    address: "12 Quai des Chartrons, Bordeaux",
-    price: 1100,
-    area: 70,
-    rooms: 2,
-    type: "Loft",
-    image: "https://images.unsplash.com/photo-1565183928294-7063f23ce0f8?auto=format&fit=crop&w=500&h=300"
-  },
-  {
-    id: 6,
-    title: "Studio étudiant près du campus",
-    address: "5 Avenue des Sciences, Montpellier",
-    price: 550,
-    area: 25,
-    rooms: 1,
-    type: "Studio",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=500&h=300"
-  },
-];
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
+import Logo from '@/components/layout/Logo';
 
 const Index = () => {
-  const [showFilters, setShowFilters] = useState(false);
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  const { signIn, signUp, user, profile } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Authentication fields
+  // États pour le formulaire de connexion
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [loginUserType, setLoginUserType] = useState<"tenant" | "owner" | "agent">("tenant");
   
-  const [regEmail, setRegEmail] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [regFirstName, setRegFirstName] = useState("");
-  const [regLastName, setRegLastName] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regUserType, setRegUserType] = useState<"tenant" | "owner" | "agent">("tenant");
+  // États pour le formulaire d'inscription
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [userType, setUserType] = useState<'tenant' | 'owner' | 'agent'>('tenant');
   
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  
-  const { user, profile, signIn, signUp } = useAuth();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user && profile) {
-      switch(profile.type) {
-        case 'tenant':
-          navigate('/tenant/dashboard');
-          break;
-        case 'owner':
-          navigate('/owner/dashboard');
-          break;
-        case 'agent':
-          navigate('/agent/dashboard');
-          break;
-      }
+  // Rediriger si l'utilisateur est déjà connecté
+  if (user && profile) {
+    switch(profile.type) {
+      case 'tenant':
+        navigate('/tenant/dashboard');
+        break;
+      case 'owner':
+        navigate('/owner/dashboard');
+        break;
+      case 'agent':
+        navigate('/agent/dashboard');
+        break;
     }
-  }, [user, profile, navigate]);
-
+  }
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     
     try {
       await signIn(loginEmail, loginPassword);
-      setShowLoginDialog(false);
+      // La redirection se fera automatiquement via le check ci-dessus
     } catch (error) {
-      console.error("Erreur de connexion:", error);
+      // Gestion des erreurs déjà dans le contexte Auth
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  const handleRegister = async (e: React.FormEvent) => {
+  
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
+    
+    if (signupPassword !== signupConfirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
     
     try {
       await signUp(
-        regEmail, 
-        regPassword, 
-        regUserType, 
-        regFirstName, 
-        regLastName,
-        regPhone
+        signupEmail,
+        signupPassword,
+        userType,
+        firstName,
+        lastName,
+        phone
       );
-      setShowRegisterDialog(false);
+      // Ici, après l'inscription réussie, l'utilisateur devra vérifier son e-mail
       toast({
-        title: "Inscription en cours de traitement",
-        description: "Veuillez vérifier votre email pour confirmer votre compte"
+        title: "Inscription réussie",
+        description: "Veuillez vérifier votre e-mail pour confirmer votre compte",
       });
     } catch (error) {
-      console.error("Erreur d'inscription:", error);
+      // Gestion des erreurs déjà dans le contexte Auth
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
   return (
-    <Layout>
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center my-8">
-          <div className="flex items-center gap-3 mb-4 md:mb-0">
-            <Logo className="h-14 w-14" />
-            <h1 className="text-3xl font-bold font-brand">
-              <span className="text-brand-navy">e-mmo</span>
-              <span className="text-brand-navy">Link</span>
-              <span className="text-brand-red">.</span>
-            </h1>
-          </div>
-          <div className="flex space-x-2">
-            <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">Connexion</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Connexion</DialogTitle>
-                  <DialogDescription>
-                    Connectez-vous à votre compte e-mmoLink.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleLogin}>
-                  <div className="grid gap-4 py-4">
-                    <Tabs 
-                      defaultValue="tenant" 
-                      className="w-full" 
-                      value={loginUserType} 
-                      onValueChange={(v) => setLoginUserType(v as "tenant" | "owner" | "agent")}
-                    >
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="tenant">Locataire</TabsTrigger>
-                        <TabsTrigger value="owner">Propriétaire</TabsTrigger>
-                        <TabsTrigger value="agent">Agent</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-4 space-y-6">
+        <div className="flex flex-col items-center space-y-2">
+          <Logo className="h-16 w-16" />
+          <h1 className="text-3xl font-bold text-center">e-mmoLink</h1>
+          <p className="text-center text-gray-500">
+            La plateforme qui connecte propriétaires, locataires et agents immobiliers
+          </p>
+        </div>
+        
+        <Card className="w-full">
+          <Tabs defaultValue="login">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Connexion</TabsTrigger>
+              <TabsTrigger value="signup">Inscription</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <form onSubmit={handleLogin}>
+                <CardHeader>
+                  <CardTitle>Connexion</CardTitle>
+                  <CardDescription>
+                    Entrez vos identifiants pour accéder à votre compte
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input 
+                      id="login-email" 
+                      type="email" 
+                      placeholder="email@exemple.com" 
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <Input 
+                      id="login-password" 
+                      type="password" 
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Connexion en cours..." : "Se connecter"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <form onSubmit={handleSignup}>
+                <CardHeader>
+                  <CardTitle>Créer un compte</CardTitle>
+                  <CardDescription>
+                    Complétez le formulaire pour vous inscrire
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">Prénom</Label>
                       <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="exemple@email.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
+                        id="firstName" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         required
                       />
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">Mot de passe</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Nom</Label>
                       <Input 
-                        id="password" 
-                        type="password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
+                        id="lastName" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                         required
                       />
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Connexion...' : 'Se connecter'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-              <DialogTrigger asChild>
-                <Button>Inscription</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Inscription</DialogTitle>
-                  <DialogDescription>
-                    Créez votre compte e-mmoLink.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleRegister}>
-                  <div className="grid gap-4 py-4">
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="email@exemple.com" 
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input 
+                      id="phone" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Type de compte</Label>
                     <Tabs 
-                      defaultValue="tenant" 
+                      value={userType} 
+                      onValueChange={(v) => setUserType(v as 'tenant' | 'owner' | 'agent')}
                       className="w-full"
-                      value={regUserType}
-                      onValueChange={(v) => setRegUserType(v as "tenant" | "owner" | "agent")}
                     >
                       <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="tenant">Locataire</TabsTrigger>
@@ -251,101 +214,41 @@ const Index = () => {
                         <TabsTrigger value="agent">Agent</TabsTrigger>
                       </TabsList>
                     </Tabs>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="first-name">Prénom</Label>
-                        <Input 
-                          id="first-name"
-                          value={regFirstName}
-                          onChange={(e) => setRegFirstName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="last-name">Nom</Label>
-                        <Input 
-                          id="last-name"
-                          value={regLastName}
-                          onChange={(e) => setRegLastName(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-email">Email</Label>
-                      <Input 
-                        id="reg-email" 
-                        type="email" 
-                        placeholder="exemple@email.com"
-                        value={regEmail}
-                        onChange={(e) => setRegEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="phone">Téléphone</Label>
-                      <Input 
-                        id="phone" 
-                        type="tel"
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-password">Mot de passe</Label>
-                      <Input 
-                        id="reg-password" 
-                        type="password"
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        required
-                      />
-                    </div>
                   </div>
-                  <DialogFooter>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Inscription...' : 'S\'inscrire'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative">
-                  <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-                  <Input 
-                    placeholder="Rechercher une ville, un quartier, une adresse..." 
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Button onClick={() => setShowFilters(!showFilters)}>
-                {showFilters ? 'Masquer les filtres' : 'Afficher les filtres'}
-              </Button>
-            </div>
-
-            {showFilters && <PropertyFilters className="mt-4" />}
-          </CardContent>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Mot de passe</Label>
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Inscription en cours..." : "S'inscrire"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+          </Tabs>
         </Card>
-
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Annonces récentes</h2>
-          <p className="text-muted-foreground">Trouvez votre futur logement parmi nos annonces.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dummyProperties.map(property => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

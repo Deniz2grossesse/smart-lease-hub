@@ -1,17 +1,19 @@
 
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
-// Get environment variables with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'public-anon-key';
+// Utiliser directement les valeurs des identifiants du projet Supabase
+const supabaseUrl = "https://tjizepapbrxjuunzzwek.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqaXplcGFwYnJ4anV1bnp6d2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NjE3NTYsImV4cCI6MjA2MzIzNzc1Nn0.JDR7-hzyqwxAsmanDra7gfYOEhwGYBh32Rx5B60yj_A";
 
-// Check if environment variables are properly set in production
-if (import.meta.env.PROD && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY)) {
-  console.error('Missing Supabase environment variables in production');
-}
-
-// Add types to the Supabase client to improve TypeScript integration
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
 
 // Export types for database
 export type { User, Session } from '@supabase/supabase-js';
+export type { Database } from '@/integrations/supabase/types';
