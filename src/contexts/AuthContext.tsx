@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -140,35 +141,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone?: string
   ) => {
     try {
-      // Create user in Auth
+      // Create user in Auth with metadata
+      // The trigger will automatically create the profile
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
             first_name: firstName,
-            last_name: lastName
+            last_name: lastName,
+            type: userType,
+            phone: phone || null
           }
         }
       });
       
       if (error) throw error;
-      
-      if (data.user) {
-        // Create profile in database
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            type: userType,
-            first_name: firstName,
-            last_name: lastName,
-            phone: phone || null
-          });
-        
-        if (profileError) throw profileError;
-      }
       
       toast({
         title: "Inscription réussie",
@@ -212,24 +200,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             first_name: 'Agent',
-            last_name: 'Test'
+            last_name: 'Test',
+            type: 'agent',
+            phone: '+33612345678'
           }
         }
       });
       
       if (agentError) throw agentError;
       
-      if (agentData.user) {
-        await supabase.from('profiles').insert({
-          id: agentData.user.id,
-          email: 'agent_test1@example.com',
-          type: 'agent',
-          first_name: 'Agent',
-          last_name: 'Test',
-          phone: '+33612345678'
-        });
-      }
-
       // Créer l'utilisateur propriétaire
       const { data: ownerData, error: ownerError } = await supabase.auth.signUp({
         email: 'proprio_test1@example.com',
@@ -237,24 +216,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             first_name: 'Proprio',
-            last_name: 'Test'
+            last_name: 'Test',
+            type: 'owner',
+            phone: '+33623456789'
           }
         }
       });
       
       if (ownerError) throw ownerError;
       
-      if (ownerData.user) {
-        await supabase.from('profiles').insert({
-          id: ownerData.user.id,
-          email: 'proprio_test1@example.com',
-          type: 'owner',
-          first_name: 'Proprio',
-          last_name: 'Test',
-          phone: '+33623456789'
-        });
-      }
-
       // Créer l'utilisateur locataire
       const { data: tenantData, error: tenantError } = await supabase.auth.signUp({
         email: 'locataire_test1@example.com',
@@ -262,24 +232,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             first_name: 'Locataire',
-            last_name: 'Test'
+            last_name: 'Test',
+            type: 'tenant',
+            phone: '+33634567890'
           }
         }
       });
       
       if (tenantError) throw tenantError;
       
-      if (tenantData.user) {
-        await supabase.from('profiles').insert({
-          id: tenantData.user.id,
-          email: 'locataire_test1@example.com',
-          type: 'tenant',
-          first_name: 'Locataire',
-          last_name: 'Test',
-          phone: '+33634567890'
-        });
-      }
-
       toast({
         title: "Comptes de test créés",
         description: "Les comptes agent, propriétaire et locataire ont été créés avec succès"
