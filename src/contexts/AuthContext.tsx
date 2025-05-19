@@ -82,12 +82,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      setProfile(data);
+      // Valider et convertir le type reçu en UserType
+      const profileType = validateUserType(data.type);
+      
+      // Créer un objet UserProfile avec le type validé
+      const userProfile: UserProfile = {
+        id: data.id,
+        email: data.email,
+        type: profileType,
+        first_name: data.first_name || undefined,
+        last_name: data.last_name || undefined,
+        phone: data.phone || undefined
+      };
+      
+      setProfile(userProfile);
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Fonction pour valider que le type est bien un UserType
+  const validateUserType = (type: string): UserType => {
+    if (type === 'tenant' || type === 'owner' || type === 'agent') {
+      return type;
+    }
+    // Valeur par défaut si le type n'est pas valide
+    console.warn(`Type utilisateur invalide: ${type}, utilisation de 'tenant' par défaut`);
+    return 'tenant';
   };
 
   const signIn = async (email: string, password: string) => {
