@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -11,10 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/layout/Logo';
 
 const Index = () => {
-  const { signIn, signUp, user, profile } = useAuth();
+  const { signIn, signUp, user, profile, createTestUsers } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
   
   // États pour le formulaire de connexion
   const [loginEmail, setLoginEmail] = useState("");
@@ -90,6 +90,15 @@ const Index = () => {
       // Gestion des erreurs déjà dans le contexte Auth
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleCreateTestUsers = async () => {
+    setIsCreatingTestUsers(true);
+    try {
+      await createTestUsers();
+    } finally {
+      setIsCreatingTestUsers(false);
     }
   };
   
@@ -247,6 +256,20 @@ const Index = () => {
             </TabsContent>
           </Tabs>
         </Card>
+        
+        {/* Button for creating test users */}
+        <div className="flex justify-center mt-4">
+          <Button 
+            variant="outline"
+            onClick={handleCreateTestUsers}
+            disabled={isCreatingTestUsers}
+            className="text-xs"
+          >
+            {isCreatingTestUsers 
+              ? "Création des comptes en cours..." 
+              : "Créer comptes de test (agent, proprio, locataire)"}
+          </Button>
+        </div>
       </div>
     </div>
   );

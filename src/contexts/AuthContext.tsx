@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +23,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userType: UserType, firstName: string, lastName: string, phone?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  createTestUsers: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -202,8 +202,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Fonction pour créer des utilisateurs de test
+  const createTestUsers = async () => {
+    try {
+      // Créer l'utilisateur agent
+      const { data: agentData, error: agentError } = await supabase.auth.signUp({
+        email: 'agent_test1@example.com',
+        password: 'agent_test1',
+        options: {
+          data: {
+            first_name: 'Agent',
+            last_name: 'Test'
+          }
+        }
+      });
+      
+      if (agentError) throw agentError;
+      
+      if (agentData.user) {
+        await supabase.from('profiles').insert({
+          id: agentData.user.id,
+          email: 'agent_test1@example.com',
+          type: 'agent',
+          first_name: 'Agent',
+          last_name: 'Test',
+          phone: '+33612345678'
+        });
+      }
+
+      // Créer l'utilisateur propriétaire
+      const { data: ownerData, error: ownerError } = await supabase.auth.signUp({
+        email: 'proprio_test1@example.com',
+        password: 'proprio_test1',
+        options: {
+          data: {
+            first_name: 'Proprio',
+            last_name: 'Test'
+          }
+        }
+      });
+      
+      if (ownerError) throw ownerError;
+      
+      if (ownerData.user) {
+        await supabase.from('profiles').insert({
+          id: ownerData.user.id,
+          email: 'proprio_test1@example.com',
+          type: 'owner',
+          first_name: 'Proprio',
+          last_name: 'Test',
+          phone: '+33623456789'
+        });
+      }
+
+      // Créer l'utilisateur locataire
+      const { data: tenantData, error: tenantError } = await supabase.auth.signUp({
+        email: 'locataire_test1@example.com',
+        password: 'locataire_test1',
+        options: {
+          data: {
+            first_name: 'Locataire',
+            last_name: 'Test'
+          }
+        }
+      });
+      
+      if (tenantError) throw tenantError;
+      
+      if (tenantData.user) {
+        await supabase.from('profiles').insert({
+          id: tenantData.user.id,
+          email: 'locataire_test1@example.com',
+          type: 'tenant',
+          first_name: 'Locataire',
+          last_name: 'Test',
+          phone: '+33634567890'
+        });
+      }
+
+      toast({
+        title: "Comptes de test créés",
+        description: "Les comptes agent, propriétaire et locataire ont été créés avec succès"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur lors de la création des comptes de test",
+        description: error.message,
+        variant: "destructive"
+      });
+      console.error("Erreur lors de la création des utilisateurs de test:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, profile, session, loading, signIn, signUp, signOut, createTestUsers }}>
       {children}
     </AuthContext.Provider>
   );
