@@ -1,5 +1,5 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { Home, User, FileText, Bell, Folder, Building, ChevronRight, LogOut, Menu } from "lucide-react";
 import { 
   Sidebar as ShadcnSidebar, 
@@ -14,12 +14,20 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Sidebar = () => {
   const location = useLocation();
+  const { profile, signOut } = useAuth();
   
-  // Déterminer automatiquement le type d'utilisateur en fonction du chemin d'URL
+  // Détermine le type d'utilisateur (à partir du profil ou du chemin d'URL)
   const determineUserType = (): "tenant" | "owner" | "agent" | null => {
+    // Si l'utilisateur est connecté, utiliser son type de profil
+    if (profile?.type) {
+      return profile.type;
+    }
+    
+    // Sinon, déterminer à partir de l'URL (comportement par défaut)
     const path = location.pathname;
     if (path.startsWith("/tenant")) return "tenant";
     if (path.startsWith("/owner")) return "owner";
@@ -80,10 +88,10 @@ const Sidebar = () => {
                   isActive={isActive(item.path)}
                   tooltip={item.title}
                 >
-                  <a href={item.path}>
+                  <Link to={item.path}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))
@@ -92,7 +100,11 @@ const Sidebar = () => {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border/20 pt-2">
-        <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground/80">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground/80"
+          onClick={() => signOut()}
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Se déconnecter</span>
         </Button>

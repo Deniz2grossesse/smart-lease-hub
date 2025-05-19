@@ -1,16 +1,19 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import PropertyCard from "@/components/property/PropertyCard";
 import PropertyFilters from "@/components/property/PropertyFilters";
 import Layout from "@/components/layout/Layout";
 import Logo from "@/components/layout/Logo";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Dummy data for property listings
 const dummyProperties = [
@@ -78,9 +81,81 @@ const dummyProperties = [
 
 const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
-  const [userType, setUserType] = useState<"tenant" | "owner" | "agent" | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  
+  // Authentication fields
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginUserType, setLoginUserType] = useState<"tenant" | "owner" | "agent">("tenant");
+  
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regFirstName, setRegFirstName] = useState("");
+  const [regLastName, setRegLastName] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regUserType, setRegUserType] = useState<"tenant" | "owner" | "agent">("tenant");
+  
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  
+  const { user, profile, signIn, signUp } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && profile) {
+      switch(profile.type) {
+        case 'tenant':
+          navigate('/tenant/dashboard');
+          break;
+        case 'owner':
+          navigate('/owner/dashboard');
+          break;
+        case 'agent':
+          navigate('/agent/dashboard');
+          break;
+      }
+    }
+  }, [user, profile, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await signIn(loginEmail, loginPassword);
+      setShowLoginDialog(false);
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await signUp(
+        regEmail, 
+        regPassword, 
+        regUserType, 
+        regFirstName, 
+        regLastName,
+        regPhone
+      );
+      setShowRegisterDialog(false);
+      toast({
+        title: "Inscription en cours de traitement",
+        description: "Veuillez vérifier votre email pour confirmer votre compte"
+      });
+    } catch (error) {
+      console.error("Erreur d'inscription:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Layout>
@@ -106,26 +181,48 @@ const Index = () => {
                     Connectez-vous à votre compte e-mmoLink.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <Tabs defaultValue="tenant" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="tenant">Locataire</TabsTrigger>
-                      <TabsTrigger value="owner">Propriétaire</TabsTrigger>
-                      <TabsTrigger value="agent">Agent</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="exemple@email.com" />
+                <form onSubmit={handleLogin}>
+                  <div className="grid gap-4 py-4">
+                    <Tabs 
+                      defaultValue="tenant" 
+                      className="w-full" 
+                      value={loginUserType} 
+                      onValueChange={(v) => setLoginUserType(v as "tenant" | "owner" | "agent")}
+                    >
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="tenant">Locataire</TabsTrigger>
+                        <TabsTrigger value="owner">Propriétaire</TabsTrigger>
+                        <TabsTrigger value="agent">Agent</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="exemple@email.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Mot de passe</Label>
+                      <Input 
+                        id="password" 
+                        type="password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <Input id="password" type="password" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Se connecter</Button>
-                </DialogFooter>
+                  <DialogFooter>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Connexion...' : 'Se connecter'}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
 
@@ -140,40 +237,77 @@ const Index = () => {
                     Créez votre compte e-mmoLink.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <Tabs defaultValue="tenant" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="tenant">Locataire</TabsTrigger>
-                      <TabsTrigger value="owner">Propriétaire</TabsTrigger>
-                      <TabsTrigger value="agent">Agent</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="first-name">Prénom</Label>
-                      <Input id="first-name" />
+                <form onSubmit={handleRegister}>
+                  <div className="grid gap-4 py-4">
+                    <Tabs 
+                      defaultValue="tenant" 
+                      className="w-full"
+                      value={regUserType}
+                      onValueChange={(v) => setRegUserType(v as "tenant" | "owner" | "agent")}
+                    >
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="tenant">Locataire</TabsTrigger>
+                        <TabsTrigger value="owner">Propriétaire</TabsTrigger>
+                        <TabsTrigger value="agent">Agent</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="first-name">Prénom</Label>
+                        <Input 
+                          id="first-name"
+                          value={regFirstName}
+                          onChange={(e) => setRegFirstName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="last-name">Nom</Label>
+                        <Input 
+                          id="last-name"
+                          value={regLastName}
+                          onChange={(e) => setRegLastName(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="last-name">Nom</Label>
-                      <Input id="last-name" />
+                      <Label htmlFor="reg-email">Email</Label>
+                      <Input 
+                        id="reg-email" 
+                        type="email" 
+                        placeholder="exemple@email.com"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Téléphone</Label>
+                      <Input 
+                        id="phone" 
+                        type="tel"
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reg-password">Mot de passe</Label>
+                      <Input 
+                        id="reg-password" 
+                        type="password"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        required
+                      />
                     </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-email">Email</Label>
-                    <Input id="reg-email" type="email" placeholder="exemple@email.com" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input id="phone" type="tel" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-password">Mot de passe</Label>
-                    <Input id="reg-password" type="password" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">S'inscrire</Button>
-                </DialogFooter>
+                  <DialogFooter>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Inscription...' : 'S\'inscrire'}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
           </div>
