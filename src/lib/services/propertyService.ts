@@ -67,24 +67,47 @@ export const createProperty = async (propertyData: PropertyFormData) => {
         imageUrls.push(publicUrl);
       }
       
-      // 3. Mise à jour de la propriété avec les URLs des images
+      // 3. Mise à jour de la propriété avec les URLs des images via un champ personnalisé
+      // Nous utilisons metadata pour stocker les URL des images
       if (imageUrls.length > 0) {
-        await supabase
-          .from('properties')
-          .update({ images: imageUrls })
-          .eq('id', property.id);
+        // Créons des entrées dans la table property_images
+        const imageEntries = imageUrls.map(url => ({
+          property_id: property.id,
+          url: url,
+          is_primary: false // par défaut
+        }));
+        
+        // Définissons la première image comme principale
+        if (imageEntries.length > 0) {
+          imageEntries[0].is_primary = true;
+        }
+        
+        const { error: imagesError } = await supabase
+          .from('property_images')
+          .insert(imageEntries);
           
-        // Mettre à jour l'objet property localement
-        property.images = imageUrls;
+        if (imagesError) throw imagesError;
       }
     }
+
+    // 4. Récupérer la propriété avec les images associées
+    const { data: completeProperty, error: fetchError } = await supabase
+      .from('properties')
+      .select(`
+        *,
+        property_images (*)
+      `)
+      .eq('id', property.id)
+      .single();
+    
+    if (fetchError) throw fetchError;
 
     toast({
       title: "Bien immobilier ajouté avec succès",
       description: "Votre bien a été ajouté à votre portefeuille.",
     });
     
-    return property;
+    return completeProperty;
   } catch (error: any) {
     console.error("Erreur lors de la création de la propriété:", error);
     toast({

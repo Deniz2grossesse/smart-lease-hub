@@ -145,7 +145,6 @@ const PropertyDetail = () => {
       
       // Upload des nouvelles images si présentes
       if (images.length > 0) {
-        const currentImages = property.images || [];
         const newImageUrls: string[] = [];
         
         for (let i = 0; i < images.length; i++) {
@@ -166,31 +165,47 @@ const PropertyDetail = () => {
           newImageUrls.push(publicUrl);
         }
         
-        // Mettre à jour le tableau d'images dans la propriété
-        const updatedImages = [...currentImages, ...newImageUrls];
+        // Créer des entrées dans la table property_images pour chaque nouvelle image
+        const imageEntries = newImageUrls.map(url => ({
+          property_id: id,
+          url: url,
+          is_primary: false // par défaut
+        }));
         
-        // Utilisation d'une requête séparée pour mettre à jour les images
-        const { error: updateImagesError } = await supabase
-          .from("properties")
-          .update({ images: updatedImages })
-          .eq("id", id);
+        // Ajouter les nouvelles images à la table property_images
+        const { error: insertImagesError } = await supabase
+          .from('property_images')
+          .insert(imageEntries);
           
-        if (updateImagesError) throw updateImagesError;
-        
-        // Mettre à jour l'objet propriété localement
-        const updatedProperty = {
-          ...property,
-          ...formData
-        };
-        updatedProperty.images = updatedImages;
-        setProperty(updatedProperty);
-      } else {
-        // Mettre à jour l'objet propriété dans le state sans modifier les images
-        setProperty({
-          ...property,
-          ...formData
-        });
+        if (insertImagesError) throw insertImagesError;
       }
+      
+      // Récupérer les données mises à jour de la propriété avec les images
+      const { data: updatedPropertyData, error: fetchError } = await supabase
+        .from("properties")
+        .select(`
+          *,
+          property_images (*)
+        `)
+        .eq("id", id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // Mettre à jour l'objet propriété dans le state
+      setProperty(updatedPropertyData);
+      setFormData({
+        title: updatedPropertyData.title,
+        address: updatedPropertyData.address,
+        city: updatedPropertyData.city,
+        postal_code: updatedPropertyData.postal_code,
+        property_type: updatedPropertyData.property_type,
+        rooms: updatedPropertyData.rooms,
+        area: updatedPropertyData.area,
+        price: updatedPropertyData.price,
+        description: updatedPropertyData.description || '',
+        is_available: updatedPropertyData.is_available
+      });
       
       setEditing(false);
       setImages([]);
@@ -549,11 +564,11 @@ const PropertyDetail = () => {
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos</h3>
                         <div className="grid grid-cols-2 gap-2">
-                          {property.images && property.images.length > 0 ? (
-                            property.images.map((image: string, index: number) => (
-                              <div key={index} className="aspect-square relative overflow-hidden rounded-md">
+                          {property.property_images && property.property_images.length > 0 ? (
+                            property.property_images.map((image: {id: string, url: string}, index: number) => (
+                              <div key={image.id} className="aspect-square relative overflow-hidden rounded-md">
                                 <img 
-                                  src={image} 
+                                  src={image.url} 
                                   alt={`Photo ${index + 1}`} 
                                   className="w-full h-full object-cover"
                                 />
