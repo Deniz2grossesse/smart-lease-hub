@@ -1,6 +1,5 @@
 
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
 import { Home, User, FileText, Bell, Folder, Building, ChevronRight, LogOut, Menu } from "lucide-react";
 import { 
   Sidebar as ShadcnSidebar, 
@@ -18,7 +17,17 @@ import Logo from "./Logo";
 
 const Sidebar = () => {
   const location = useLocation();
-  const [userType, setUserType] = useState<"tenant" | "owner" | "agent" | null>("tenant");
+  
+  // Déterminer automatiquement le type d'utilisateur en fonction du chemin d'URL
+  const determineUserType = (): "tenant" | "owner" | "agent" | null => {
+    const path = location.pathname;
+    if (path.startsWith("/tenant")) return "tenant";
+    if (path.startsWith("/owner")) return "owner";
+    if (path.startsWith("/agent")) return "agent";
+    return "tenant"; // Par défaut, on utilise le type tenant
+  };
+
+  const userType = determineUserType();
 
   const isActive = (path: string) => {
     return location.pathname === path;
