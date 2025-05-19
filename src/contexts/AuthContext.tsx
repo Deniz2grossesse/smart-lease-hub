@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -79,14 +80,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Utiliser maybeSingle au lieu de single pour éviter les erreurs quand aucun profil n'est trouvé
 
       if (error) {
         console.error("Error fetching profile:", error);
-        throw error;
+        setLoading(false);
+        return; // Ne pas arrêter l'exécution avec throw
       }
 
       console.log("Profile data received:", data);
+      
+      // Si aucun profil n'est trouvé, on utilise les informations de l'utilisateur pour construire un profil par défaut
+      if (!data) {
+        console.log("No profile found, using default profile from user data");
+        const defaultProfile: UserProfile = {
+          id: userId,
+          email: user?.email || '',
+          type: 'tenant' // Valeur par défaut
+        };
+        
+        setProfile(defaultProfile);
+        redirectBasedOnUserType(defaultProfile.type);
+        setLoading(false);
+        return;
+      }
       
       // Valider et convertir le type reçu en UserType
       const profileType = validateUserType(data.type);
@@ -107,6 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       redirectBasedOnUserType(profileType);
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
+      // En cas d'erreur, définir un profil par défaut pour permettre la navigation
+      if (user) {
+        const defaultProfile: UserProfile = {
+          id: userId,
+          email: user.email || '',
+          type: 'tenant' // Valeur par défaut
+        };
+        setProfile(defaultProfile);
+        redirectBasedOnUserType(defaultProfile.type);
+      }
     } finally {
       setLoading(false);
     }
@@ -115,6 +142,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Add a new function to redirect based on user type
   const redirectBasedOnUserType = (userType: UserType) => {
     console.log("Redirecting based on user type:", userType);
+    // Ne pas rediriger si l'utilisateur est déjà sur une page correspondant à son type
+    const currentPath = window.location.pathname;
+    const isOnCorrectPath = (
+      (userType === 'tenant' && currentPath.startsWith('/tenant')) ||
+      (userType === 'owner' && currentPath.startsWith('/owner')) ||
+      (userType === 'agent' && currentPath.startsWith('/agent'))
+    );
+    
+    if (isOnCorrectPath) {
+      console.log("User already on correct path:", currentPath);
+      return;
+    }
+    
     switch(userType) {
       case 'tenant':
         navigate('/tenant/dashboard');
