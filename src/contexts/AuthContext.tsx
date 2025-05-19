@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -40,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -80,9 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
+        console.error("Error fetching profile:", error);
         throw error;
       }
 
+      console.log("Profile data received:", data);
+      
       // Valider et convertir le type reçu en UserType
       const profileType = validateUserType(data.type);
       
@@ -97,10 +102,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       
       setProfile(userProfile);
+      
+      // Redirect based on user type after profile is loaded
+      redirectBasedOnUserType(profileType);
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Add a new function to redirect based on user type
+  const redirectBasedOnUserType = (userType: UserType) => {
+    console.log("Redirecting based on user type:", userType);
+    switch(userType) {
+      case 'tenant':
+        navigate('/tenant/dashboard');
+        break;
+      case 'owner':
+        navigate('/owner/dashboard');
+        break;
+      case 'agent':
+        navigate('/agent/dashboard');
+        break;
+      default:
+        navigate('/');
     }
   };
   
@@ -116,13 +142,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("Attempting sign in for:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (error) throw error;
+      
       toast({
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté"
       });
+      
+      console.log("Sign in successful, user data:", data.user?.id);
+      
+      // If we have user data and profile data, redirect immediately
+      // This helps with faster navigation
+      if (data.user && profile) {
+        redirectBasedOnUserType(profile.type);
+      }
+      // Otherwise, profile fetch and redirect will happen via the auth state change listener
+      
     } catch (error: any) {
+      console.error("Sign in error:", error.message);
       toast({
         title: "Erreur de connexion",
         description: error.message,

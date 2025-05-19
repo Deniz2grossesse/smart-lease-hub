@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/layout/Logo';
 
 const Index = () => {
-  const { signIn, signUp, user, profile, createTestUsers } = useAuth();
+  const { signIn, signUp, user, profile, createTestUsers, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -29,30 +29,38 @@ const Index = () => {
   const [phone, setPhone] = useState("");
   const [userType, setUserType] = useState<'tenant' | 'owner' | 'agent'>('tenant');
   
-  // Rediriger si l'utilisateur est déjà connecté
-  if (user && profile) {
-    switch(profile.type) {
-      case 'tenant':
-        navigate('/tenant/dashboard');
-        break;
-      case 'owner':
-        navigate('/owner/dashboard');
-        break;
-      case 'agent':
-        navigate('/agent/dashboard');
-        break;
+  // Effet pour rediriger si l'utilisateur est déjà connecté
+  useEffect(() => {
+    console.log("Index page - User:", user?.id, "Profile:", profile?.type, "Loading:", loading);
+    
+    // Ne rediriger que si le chargement est terminé et que l'utilisateur est connecté avec un profil
+    if (!loading && user && profile) {
+      console.log("Redirecting to dashboard for user type:", profile.type);
+      switch(profile.type) {
+        case 'tenant':
+          navigate('/tenant/dashboard');
+          break;
+        case 'owner':
+          navigate('/owner/dashboard');
+          break;
+        case 'agent':
+          navigate('/agent/dashboard');
+          break;
+      }
     }
-  }
+  }, [user, profile, loading, navigate]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      console.log("Login submission for:", loginEmail);
       await signIn(loginEmail, loginPassword);
-      // La redirection se fera automatiquement via le check ci-dessus
+      // La redirection se fera automatiquement via useEffect ou via le context Auth
     } catch (error) {
       // Gestion des erreurs déjà dans le contexte Auth
+      console.error("Login submission error handled in AuthContext");
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +109,17 @@ const Index = () => {
       setIsCreatingTestUsers(false);
     }
   };
+  
+  // Show loading state if auth is being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="text-lg">Chargement en cours...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
