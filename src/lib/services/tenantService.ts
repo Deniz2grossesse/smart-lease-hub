@@ -29,16 +29,18 @@ export interface ApplicationFormData {
 
 export const createOrUpdateApplication = async (applicationData: ApplicationFormData, applicationId?: string, status: 'draft' | 'submitted' = 'draft') => {
   try {
-    const { user } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (sessionError || !sessionData.session?.user) {
       throw new Error("Utilisateur non connecté");
     }
+    
+    const userId = sessionData.session.user.id;
 
     const data = {
       ...applicationData,
       status: status,
-      tenant_id: user.id,
+      tenant_id: userId,
     };
     
     let result;
@@ -86,16 +88,18 @@ export const createOrUpdateApplication = async (applicationData: ApplicationForm
 
 export const fetchApplication = async (applicationId?: string) => {
   try {
-    const { user } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (sessionError || !sessionData.session?.user) {
       throw new Error("Utilisateur non connecté");
     }
+    
+    const userId = sessionData.session.user.id;
     
     let query = supabase
       .from('tenant_applications')
       .select('*')
-      .eq('tenant_id', user.id);
+      .eq('tenant_id', userId);
       
     if (applicationId) {
       query = query.eq('id', applicationId);

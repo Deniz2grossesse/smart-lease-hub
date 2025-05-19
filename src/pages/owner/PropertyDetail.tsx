@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -169,18 +168,29 @@ const PropertyDetail = () => {
         
         // Mettre à jour le tableau d'images dans la propriété
         const updatedImages = [...currentImages, ...newImageUrls];
-        await supabase
+        
+        // Utilisation d'une requête séparée pour mettre à jour les images
+        const { error: updateImagesError } = await supabase
           .from("properties")
           .update({ images: updatedImages })
           .eq("id", id);
+          
+        if (updateImagesError) throw updateImagesError;
+        
+        // Mettre à jour l'objet propriété localement
+        const updatedProperty = {
+          ...property,
+          ...formData
+        };
+        updatedProperty.images = updatedImages;
+        setProperty(updatedProperty);
+      } else {
+        // Mettre à jour l'objet propriété dans le state sans modifier les images
+        setProperty({
+          ...property,
+          ...formData
+        });
       }
-      
-      // Mettre à jour l'objet propriété dans le state
-      setProperty({
-        ...property,
-        ...formData,
-        images: images.length > 0 ? [...(property.images || []), ...images] : property.images
-      });
       
       setEditing(false);
       setImages([]);

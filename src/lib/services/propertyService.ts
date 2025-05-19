@@ -17,11 +17,13 @@ export interface PropertyFormData {
 
 export const createProperty = async (propertyData: PropertyFormData) => {
   try {
-    const { user } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (sessionError || !sessionData.session?.user) {
       throw new Error("Utilisateur non connecté");
     }
+    
+    const userId = sessionData.session.user.id;
     
     // 1. Création de la propriété dans la base de données
     const { data: property, error } = await supabase
@@ -36,7 +38,7 @@ export const createProperty = async (propertyData: PropertyFormData) => {
         area: propertyData.area,
         price: propertyData.price,
         description: propertyData.description || null,
-        owner_id: user.id,
+        owner_id: userId,
       })
       .select()
       .single();
@@ -45,9 +47,11 @@ export const createProperty = async (propertyData: PropertyFormData) => {
 
     // 2. Upload des images si présentes
     if (propertyData.images && propertyData.images.length > 0) {
-      const imagePromises = propertyData.images.map(async (image, index) => {
+      const imageUrls: string[] = [];
+      
+      for (const image of propertyData.images) {
         const fileExt = image.name.split('.').pop();
-        const filePath = `${property.id}/${index}-${Date.now()}.${fileExt}`;
+        const filePath = `${property.id}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('property_images')
@@ -60,16 +64,19 @@ export const createProperty = async (propertyData: PropertyFormData) => {
           .from('property_images')
           .getPublicUrl(filePath);
           
-        return publicUrl;
-      });
-      
-      const imageUrls = await Promise.all(imagePromises);
+        imageUrls.push(publicUrl);
+      }
       
       // 3. Mise à jour de la propriété avec les URLs des images
-      await supabase
-        .from('properties')
-        .update({ images: imageUrls })
-        .eq('id', property.id);
+      if (imageUrls.length > 0) {
+        await supabase
+          .from('properties')
+          .update({ images: imageUrls })
+          .eq('id', property.id);
+          
+        // Mettre à jour l'objet property localement
+        property.images = imageUrls;
+      }
     }
 
     toast({

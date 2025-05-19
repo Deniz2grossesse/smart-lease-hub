@@ -11,15 +11,17 @@ export interface DocumentFormData {
 
 export const uploadDocument = async (documentData: DocumentFormData) => {
   try {
-    const { user } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (sessionError || !sessionData.session?.user) {
       throw new Error("Utilisateur non connecté");
     }
     
+    const userId = sessionData.session.user.id;
+    
     // 1. Upload du fichier
     const fileExt = documentData.file.name.split('.').pop();
-    const filePath = `${user.id}/${documentData.type}-${Date.now()}.${fileExt}`;
+    const filePath = `${userId}/${documentData.type}-${Date.now()}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from('tenant_documents')
@@ -34,7 +36,7 @@ export const uploadDocument = async (documentData: DocumentFormData) => {
         name: documentData.name,
         type: documentData.type,
         file_path: filePath,
-        owner_id: user.id,
+        owner_id: userId,
         application_id: documentData.application_id || null,
       })
       .select()
