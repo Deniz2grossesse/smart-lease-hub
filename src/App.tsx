@@ -15,6 +15,8 @@ import TenantApplication from "./pages/tenant/Application";
 
 // Owner Routes
 import OwnerDashboard from "./pages/owner/Dashboard";
+import PropertyDetail from "./pages/owner/PropertyDetail";
+import TenantDetail from "./pages/owner/TenantDetail";
 
 // Agent Routes
 import AgentDashboard from "./pages/agent/Dashboard";
@@ -79,6 +81,22 @@ const App = () => (
               element={
                 <ProtectedRoute userTypes={['owner']}>
                   <OwnerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/owner/property/:id" 
+              element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <PropertyDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/owner/tenant/:id" 
+              element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <TenantDetail />
                 </ProtectedRoute>
               } 
             />
