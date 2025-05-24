@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import Logo from '@/components/layout/Logo';
 import { Separator } from "@/components/ui/separator";
 
 const Index = () => {
-  const { signIn, signInWithGoogle, signInWithApple, signUp, user, profile, createTestUsers, loading } = useAuth();
+  const { signIn, signInWithGoogle, signUp, user, profile, createTestUsers, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -67,17 +66,6 @@ const Index = () => {
     setIsLoading(true);
     try {
       await signInWithGoogle();
-    } catch (error) {
-      // Gestion des erreurs déjà dans le contexte Auth
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithApple();
     } catch (error) {
       // Gestion des erreurs déjà dans le contexte Auth
     } finally {
@@ -166,7 +154,7 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Boutons de connexion sociale */}
+                {/* Bouton de connexion Google uniquement */}
                 <div className="space-y-2">
                   <Button 
                     variant="outline" 
@@ -181,16 +169,6 @@ const Index = () => {
                       <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Continuer avec Google
-                  </Button>
-                  <Button 
-                    className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50" 
-                    onClick={handleAppleLogin}
-                    disabled={isLoading}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      <path fill="white" d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
-                    </svg>
-                    Continuer avec Apple
                   </Button>
                 </div>
                 
@@ -243,7 +221,7 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Boutons de connexion sociale pour l'inscription */}
+                  {/* Bouton de connexion Google uniquement pour l'inscription */}
                   <div className="space-y-2">
                     <Button 
                       variant="outline" 
@@ -258,16 +236,6 @@ const Index = () => {
                         <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                       </svg>
                       S'inscrire avec Google
-                    </Button>
-                    <Button 
-                      className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50" 
-                      onClick={handleAppleLogin}
-                      disabled={isLoading}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path fill="white" d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
-                      </svg>
-                      S'inscrire avec Apple
                     </Button>
                   </div>
                   

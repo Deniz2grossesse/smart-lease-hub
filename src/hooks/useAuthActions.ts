@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -49,27 +48,6 @@ export const useAuthActions = (
     } catch (error: any) {
       toast({
         title: "Erreur de connexion Google",
-        description: error.message,
-        variant: "destructive"
-      });
-      throw error;
-    }
-  };
-
-  const signInWithApple = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      
-      if (error) throw error;
-      
-    } catch (error: any) {
-      toast({
-        title: "Erreur de connexion Apple",
         description: error.message,
         variant: "destructive"
       });
@@ -196,7 +174,6 @@ export const useAuthActions = (
   return {
     signIn,
     signInWithGoogle,
-    signInWithApple,
     signUp,
     signOut,
     createTestUsers

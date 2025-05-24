@@ -17,6 +17,7 @@ export type Database = {
           read: boolean
           title: string
           type: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -26,6 +27,7 @@ export type Database = {
           read?: boolean
           title: string
           type: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -35,6 +37,7 @@ export type Database = {
           read?: boolean
           title?: string
           type?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -49,33 +52,36 @@ export type Database = {
       }
       documents: {
         Row: {
-          application_id: string | null
+          application_id: string
           created_at: string
           file_path: string
           id: string
           name: string
           owner_id: string
           type: string
+          updated_at: string | null
           verified: boolean
         }
         Insert: {
-          application_id?: string | null
+          application_id: string
           created_at?: string
           file_path: string
           id?: string
           name: string
           owner_id: string
           type: string
+          updated_at?: string | null
           verified?: boolean
         }
         Update: {
-          application_id?: string | null
+          application_id?: string
           created_at?: string
           file_path?: string
           id?: string
           name?: string
           owner_id?: string
           type?: string
+          updated_at?: string | null
           verified?: boolean
         }
         Relationships: [
@@ -248,6 +254,7 @@ export type Database = {
           id: string
           is_primary: boolean
           property_id: string
+          updated_at: string | null
           url: string
         }
         Insert: {
@@ -255,6 +262,7 @@ export type Database = {
           id?: string
           is_primary?: boolean
           property_id: string
+          updated_at?: string | null
           url: string
         }
         Update: {
@@ -262,6 +270,7 @@ export type Database = {
           id?: string
           is_primary?: boolean
           property_id?: string
+          updated_at?: string | null
           url?: string
         }
         Relationships: [

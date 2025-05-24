@@ -22,7 +22,6 @@ export interface AuthContextType {
   isLoading: boolean; // Add alias for backward compatibility
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
   signUp: (email: string, password: string, userType: UserType, firstName: string, lastName: string, phone?: string) => Promise<void>;
   signOut: () => Promise<void>;
   createTestUsers: () => Promise<void>;
