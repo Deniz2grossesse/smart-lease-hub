@@ -4,12 +4,10 @@ import { toast } from '@/hooks/use-toast';
 import { Property, PropertyFormData } from '@/lib/types/property';
 import { validatePropertyForm, sanitizeInput } from '@/lib/utils/validation';
 
-// Export PropertyFormData from types
 export type { PropertyFormData } from '@/lib/types/property';
 
 export const createProperty = async (propertyData: PropertyFormData): Promise<Property> => {
   try {
-    // Validate form data
     const errors = validatePropertyForm(propertyData);
     if (errors.length > 0) {
       throw new Error(errors.join(', '));
@@ -23,7 +21,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
     
     const userId = sessionData.session.user.id;
     
-    // Sanitize input data
     const sanitizedData = {
       title: sanitizeInput(propertyData.title),
       address: sanitizeInput(propertyData.address),
@@ -37,7 +34,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       owner_id: userId,
     };
     
-    // 1. Création de la propriété dans la base de données
     const { data: property, error } = await supabase
       .from('properties')
       .insert(sanitizedData)
@@ -48,7 +44,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       throw error;
     }
 
-    // 2. Upload des images si présentes
     if (propertyData.images && propertyData.images.length > 0) {
       const imageUrls: string[] = [];
       
@@ -62,10 +57,9 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
             .upload(filePath, image);
             
           if (uploadError) {
-            continue; // Continue avec les autres images même si une échoue
+            continue;
           }
           
-          // Récupérer l'URL publique
           const { data: { publicUrl } } = supabase.storage
             .from('property-images')
             .getPublicUrl(filePath);
@@ -76,12 +70,11 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
         }
       }
       
-      // 3. Créer les entrées dans la table property_images
       if (imageUrls.length > 0) {
         const imageEntries = imageUrls.map((url, index) => ({
           property_id: property.id,
           url: url,
-          is_primary: index === 0 // La première image est principale
+          is_primary: index === 0
         }));
         
         const { error: imagesError } = await supabase
@@ -94,7 +87,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       }
     }
 
-    // 4. Récupérer la propriété avec les images associées
     const { data: completeProperty, error: fetchError } = await supabase
       .from('properties')
       .select(`

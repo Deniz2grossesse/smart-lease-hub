@@ -20,19 +20,16 @@ const Sidebar = () => {
   const location = useLocation();
   const { profile, signOut } = useAuth();
   
-  // Détermine le type d'utilisateur (à partir du profil ou du chemin d'URL)
   const determineUserType = (): "tenant" | "owner" | "agent" | null => {
-    // Si l'utilisateur est connecté, utiliser son type de profil
     if (profile?.type) {
       return profile.type;
     }
     
-    // Sinon, déterminer à partir de l'URL (comportement par défaut)
     const path = location.pathname;
     if (path.startsWith("/tenant")) return "tenant";
     if (path.startsWith("/owner")) return "owner";
     if (path.startsWith("/agent")) return "agent";
-    return "tenant"; // Par défaut, on utilise le type tenant
+    return null;
   };
 
   const userType = determineUserType();
@@ -65,6 +62,11 @@ const Sidebar = () => {
     ]
   };
 
+  // Ne pas afficher la sidebar si l'utilisateur n'est pas connecté ou si le type n'est pas déterminé
+  if (!profile || !userType) {
+    return null;
+  }
+
   return (
     <ShadcnSidebar>
       <SidebarRail />
@@ -80,22 +82,20 @@ const Sidebar = () => {
 
       <SidebarContent>
         <SidebarMenu>
-          {userType && 
-            menuItems[userType].map((item) => (
-              <SidebarMenuItem key={item.path}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive(item.path)}
-                  tooltip={item.title}
-                >
-                  <Link to={item.path}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))
-          }
+          {menuItems[userType].map((item) => (
+            <SidebarMenuItem key={item.path}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.path)}
+                tooltip={item.title}
+              >
+                <Link to={item.path}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarContent>
 

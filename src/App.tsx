@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
@@ -68,7 +69,7 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              {/* Routes Owner - URLs uniformisées avec /properties/:id */}
+              {/* Routes Owner - Toutes uniformisées avec /properties/:id */}
               <Route path="/owner/*" element={
                 <ProtectedRoute userTypes={['owner']}>
                   <Layout>
