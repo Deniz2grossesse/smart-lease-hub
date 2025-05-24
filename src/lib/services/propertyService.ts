@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -28,21 +29,24 @@ export const createProperty = async (propertyData: PropertyFormData) => {
     const { data: property, error } = await supabase
       .from('properties')
       .insert({
-        title: propertyData.title,
-        address: propertyData.address,
-        city: propertyData.city,
-        postal_code: propertyData.postal_code,
+        title: propertyData.title.trim(),
+        address: propertyData.address.trim(),
+        city: propertyData.city.trim(),
+        postal_code: propertyData.postal_code.trim(),
         property_type: propertyData.property_type,
         rooms: propertyData.rooms,
         area: propertyData.area,
         price: propertyData.price,
-        description: propertyData.description || null,
+        description: propertyData.description?.trim() || null,
         owner_id: userId,
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
 
     // 2. Upload des images si présentes
     if (propertyData.images && propertyData.images.length > 0) {
@@ -52,21 +56,26 @@ export const createProperty = async (propertyData: PropertyFormData) => {
         const fileExt = image.name.split('.').pop();
         const filePath = `${property.id}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         
-        const { error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(filePath, image);
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(filePath, image);
+            
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            continue; // Continue avec les autres images même si une échoue
+          }
           
-        if (uploadError) {
-          console.error('Erreur upload:', uploadError);
-          continue; // Continue avec les autres images même si une échoue
+          // Récupérer l'URL publique
+          const { data: { publicUrl } } = supabase.storage
+            .from('property-images')
+            .getPublicUrl(filePath);
+            
+          imageUrls.push(publicUrl);
+        } catch (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          continue;
         }
-        
-        // Récupérer l'URL publique
-        const { data: { publicUrl } } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(filePath);
-          
-        imageUrls.push(publicUrl);
       }
       
       // 3. Créer les entrées dans la table property_images
@@ -82,7 +91,7 @@ export const createProperty = async (propertyData: PropertyFormData) => {
           .insert(imageEntries);
           
         if (imagesError) {
-          console.error('Erreur lors de l\'ajout des images:', imagesError);
+          console.error('Error inserting images:', imagesError);
         }
       }
     }
@@ -97,7 +106,10 @@ export const createProperty = async (propertyData: PropertyFormData) => {
       .eq('id', property.id)
       .single();
     
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('Fetch error:', fetchError);
+      throw fetchError;
+    }
 
     toast({
       title: "Bien immobilier ajouté avec succès",
@@ -126,7 +138,10 @@ export const fetchProperties = async () => {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Fetch properties error:', error);
+      throw error;
+    }
 
     return properties;
   } catch (error: any) {
@@ -147,7 +162,10 @@ export const deleteProperty = async (id: string) => {
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Delete error:', error);
+      throw error;
+    }
 
     toast({
       title: "Bien supprimé",

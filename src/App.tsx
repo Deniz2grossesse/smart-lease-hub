@@ -43,7 +43,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 w-full">
           <Routes>
             {/* Page d'accueil publique */}
             <Route path="/" element={<Index />} />

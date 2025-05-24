@@ -15,25 +15,30 @@ const AgentProperties = () => {
   const { data: properties = [], isLoading, error } = useQuery({
     queryKey: ['agent-properties'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          property_images (*),
-          property_applications (count)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching properties:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les propriétés",
-          variant: "destructive"
-        });
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select(`
+            *,
+            property_images (*),
+            property_applications (count)
+          `)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching properties:', error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les propriétés",
+            variant: "destructive"
+          });
+          throw error;
+        }
+        return data;
+      } catch (error) {
+        console.error('Error in properties query:', error);
         throw error;
       }
-      return data;
     }
   });
 
