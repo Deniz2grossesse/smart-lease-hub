@@ -9,8 +9,6 @@ import ErrorBoundary from '@/components/ui/error-boundary';
 // Pages publiques
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
-import PublicProperties from '@/pages/PublicProperties';
-import PublicPropertyDetail from '@/pages/PublicPropertyDetail';
 
 // Pages Agent
 import AgentDashboard from '@/pages/agent/Dashboard';
@@ -49,10 +47,8 @@ function App() {
         <ErrorBoundary>
           <div className="min-h-screen bg-gray-50 w-full">
             <Routes>
-              {/* Pages publiques */}
+              {/* Page d'accueil publique */}
               <Route path="/" element={<Index />} />
-              <Route path="/properties" element={<PublicProperties />} />
-              <Route path="/properties/:id" element={<PublicPropertyDetail />} />
               
               {/* Routes Agent */}
               <Route path="/agent/*" element={

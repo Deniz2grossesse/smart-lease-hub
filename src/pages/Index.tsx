@@ -1,165 +1,358 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Building, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/layout/Logo';
-import SearchBar from '@/components/search/SearchBar';
-import PropertyGrid from '@/components/property/PropertyGrid';
-import FilterSidebar from '@/components/search/FilterSidebar';
-import { fetchPublicProperties, PublicPropertyFilters } from '@/lib/services/publicPropertyService';
-import { Property } from '@/lib/types/property';
+import { Separator } from "@/components/ui/separator";
 
-const Index: React.FC = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<PublicPropertyFilters>({});
-  const [resultsCount, setResultsCount] = useState(0);
-
+const Index = () => {
+  const { signIn, signInWithGoogle, signUp, user, profile, createTestUsers, loading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
+  
+  // États pour le formulaire de connexion
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
+  // États pour le formulaire d'inscription
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [userType, setUserType] = useState<'tenant' | 'owner' | 'agent'>('tenant');
+  
+  // Effet pour rediriger si l'utilisateur est déjà connecté
   useEffect(() => {
-    loadProperties();
-  }, [filters]);
-
-  const loadProperties = async () => {
+    // Ne rediriger que si le chargement est terminé et que l'utilisateur est connecté avec un profil
+    if (!loading && user && profile) {
+      switch(profile.type) {
+        case 'tenant':
+          navigate('/tenant/dashboard');
+          break;
+        case 'owner':
+          navigate('/owner/dashboard');
+          break;
+        case 'agent':
+          navigate('/agent/dashboard');
+          break;
+      }
+    }
+  }, [user, profile, loading, navigate]);
+  
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+    
     try {
-      const data = await fetchPublicProperties(filters);
-      setProperties(data);
-      setResultsCount(data.length);
+      await signIn(loginEmail, loginPassword);
+      // La redirection se fera automatiquement via useEffect ou via le context Auth
     } catch (error) {
-      console.error('Erreur chargement propriétés:', error);
+      // Gestion des erreurs déjà dans le contexte Auth
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearch = (searchFilters: PublicPropertyFilters) => {
-    setFilters(prev => ({ ...prev, ...searchFilters }));
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      // Gestion des erreurs déjà dans le contexte Auth
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const handleAdvancedFilters = (advancedFilters: any) => {
-    setFilters(prev => ({ ...prev, ...advancedFilters }));
+  
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    if (signupPassword !== signupConfirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      await signUp(
+        signupEmail,
+        signupPassword,
+        userType,
+        firstName,
+        lastName,
+        phone
+      );
+      // Ici, après l'inscription réussie, l'utilisateur devra vérifier son e-mail
+      toast({
+        title: "Inscription réussie",
+        description: "Veuillez vérifier votre e-mail pour confirmer votre compte",
+      });
+    } catch (error) {
+      // Gestion des erreurs déjà dans le contexte Auth
+    } finally {
+      setIsLoading(false);
+    }
   };
-
+  
+  const handleCreateTestUsers = async () => {
+    setIsCreatingTestUsers(true);
+    try {
+      await createTestUsers();
+    } finally {
+      setIsCreatingTestUsers(false);
+    }
+  };
+  
+  // Show loading state if auth is being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="text-lg">Chargement en cours...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header simplifié */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Logo className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
-            </div>
-            <nav className="flex space-x-6">
-              <Link to="/" className="text-gray-600 hover:text-gray-900">
-                Espace Pro
-              </Link>
-            </nav>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-4 space-y-6">
+        <div className="flex flex-col items-center space-y-2">
+          <Logo className="h-16 w-16" />
+          <h1 className="text-3xl font-bold text-center">e-mmoLink</h1>
+          <p className="text-center text-gray-500">
+            La plateforme qui connecte propriétaires, locataires et agents immobiliers
+          </p>
         </div>
-      </header>
-
-      {/* Barre de recherche principale */}
-      <section className="bg-gradient-to-br from-blue-50 to-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Trouvez votre logement idéal
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Découvrez nos annonces immobilières et candidatez en ligne sans inscription
-            </p>
-          </div>
-          
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      </section>
-
-      {/* Contenu principal - marketplace */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar filtres */}
-          <aside className="w-full lg:w-80">
-            <FilterSidebar onFiltersChange={handleAdvancedFilters} />
-          </aside>
-
-          {/* Grille d'annonces */}
-          <div className="flex-1">
-            {/* Barre de résultats */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {isLoading ? (
-                    'Recherche en cours...'
-                  ) : (
-                    `${resultsCount} annonce${resultsCount > 1 ? 's' : ''} trouvée${resultsCount > 1 ? 's' : ''}`
-                  )}
-                </h2>
-                {Object.keys(filters).length > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    Filtres appliqués
-                  </p>
-                )}
-              </div>
-
-              {/* Accès rapide Espace Pro */}
-              <Button asChild variant="outline" size="sm">
-                <Link to="/">
-                  <Users className="mr-2 h-4 w-4" />
-                  Espace Pro
-                </Link>
-              </Button>
-            </div>
-
-            {/* Grille des propriétés */}
-            <PropertyGrid properties={properties} isLoading={isLoading} />
-
-            {/* Call to action si pas de résultats */}
-            {!isLoading && properties.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-white rounded-lg shadow-sm p-8 border">
-                  <Building className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    Aucune annonce ne correspond à vos critères
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Essayez d'élargir votre recherche ou modifiez vos filtres
-                  </p>
-                  <Button onClick={() => {
-                    setFilters({});
-                  }}>
-                    Voir toutes les annonces
+        
+        <Card className="w-full">
+          <Tabs defaultValue="login">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Connexion</TabsTrigger>
+              <TabsTrigger value="signup">Inscription</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <CardHeader>
+                <CardTitle>Connexion</CardTitle>
+                <CardDescription>
+                  Entrez vos identifiants pour accéder à votre compte
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Bouton de connexion Google uniquement */}
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-white border-gray-300 text-black hover:bg-gray-50" 
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                  >
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continuer avec Google
                   </Button>
                 </div>
-              </div>
-            )}
-          </div>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Ou continuer avec
+                    </span>
+                  </div>
+                </div>
+                
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input 
+                      id="login-email" 
+                      type="email" 
+                      placeholder="email@exemple.com" 
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <Input 
+                      id="login-password" 
+                      type="password" 
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Connexion en cours..." : "Se connecter"}
+                  </Button>
+                </form>
+              </CardContent>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <form onSubmit={handleSignup}>
+                <CardHeader>
+                  <CardTitle>Créer un compte</CardTitle>
+                  <CardDescription>
+                    Complétez le formulaire pour vous inscrire
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Bouton de connexion Google uniquement pour l'inscription */}
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full bg-white border-gray-300 text-black hover:bg-gray-50" 
+                      onClick={handleGoogleLogin}
+                      disabled={isLoading}
+                    >
+                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                      S'inscrire avec Google
+                    </Button>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Ou continuer avec
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">Prénom</Label>
+                      <Input 
+                        id="firstName" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Nom</Label>
+                      <Input 
+                        id="lastName" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="email@exemple.com" 
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input 
+                      id="phone" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Type de compte</Label>
+                    <Tabs 
+                      value={userType} 
+                      onValueChange={(v) => setUserType(v as 'tenant' | 'owner' | 'agent')}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="tenant">Locataire</TabsTrigger>
+                        <TabsTrigger value="owner">Propriétaire</TabsTrigger>
+                        <TabsTrigger value="agent">Agent</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Mot de passe</Label>
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Inscription en cours..." : "S'inscrire"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </Card>
+        
+        {/* Button for creating test users */}
+        <div className="flex justify-center mt-4">
+          <Button 
+            variant="outline"
+            onClick={handleCreateTestUsers}
+            disabled={isCreatingTestUsers}
+            className="text-xs"
+          >
+            {isCreatingTestUsers 
+              ? "Création des comptes en cours..." 
+              : "Créer comptes de test (agent, proprio, locataire)"}
+          </Button>
         </div>
-      </main>
-
-      {/* Footer minimal */}
-      <footer className="bg-gray-900 text-white py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <Logo className="h-6 w-6" />
-              <span className="text-lg font-bold">e-mmoLink</span>
-            </div>
-            <p className="text-gray-400 mb-4">
-              La plateforme moderne pour simplifier la recherche de logement
-            </p>
-            <div className="flex justify-center space-x-6 text-sm">
-              <Link to="/" className="hover:text-white">Espace Pro</Link>
-              <a href="#" className="hover:text-white">Contact</a>
-              <a href="#" className="hover:text-white">Aide</a>
-            </div>
-            <p className="text-gray-500 text-sm mt-4">
-              &copy; 2024 e-mmoLink. Tous droits réservés.
-            </p>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 };
