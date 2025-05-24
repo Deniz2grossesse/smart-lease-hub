@@ -87,7 +87,7 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
           .insert(imageEntries);
           
         if (imagesError) {
-          // Continue même si l'insertion des images échoue
+          console.warn('Erreur lors de l\'insertion des images:', imagesError);
         }
       }
     }
@@ -106,15 +106,16 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
     }
 
     toast({
-      title: "Bien immobilier ajouté avec succès",
-      description: "Votre bien a été ajouté à votre portefeuille.",
+      title: "Bien immobilier créé",
+      description: `"${property.title}" a été ajouté à votre portefeuille avec succès`,
     });
     
     return completeProperty as Property;
   } catch (error: any) {
+    console.error('Erreur lors de la création:', error);
     toast({
       title: "Erreur lors de l'ajout du bien",
-      description: error.message,
+      description: error.message || "Une erreur s'est produite lors de la création du bien",
       variant: "destructive",
     });
     throw error;
@@ -137,9 +138,10 @@ export const fetchProperties = async (): Promise<Property[]> => {
 
     return (properties || []) as Property[];
   } catch (error: any) {
+    console.error('Erreur lors de la récupération:', error);
     toast({
-      title: "Erreur",
-      description: "Impossible de récupérer vos biens immobiliers",
+      title: "Erreur de chargement",
+      description: "Impossible de récupérer la liste des biens immobiliers",
       variant: "destructive",
     });
     return [];
@@ -148,10 +150,32 @@ export const fetchProperties = async (): Promise<Property[]> => {
 
 export const deleteProperty = async (id: string): Promise<boolean> => {
   try {
+    // Vérifier que l'utilisateur est le propriétaire
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session?.user) {
+      throw new Error("Utilisateur non connecté");
+    }
+
+    const { data: property, error: propertyError } = await supabase
+      .from('properties')
+      .select('owner_id, title')
+      .eq('id', id)
+      .single();
+
+    if (propertyError) {
+      throw new Error("Propriété introuvable");
+    }
+
+    if (property.owner_id !== sessionData.session.user.id) {
+      throw new Error("Vous n'avez pas les droits pour supprimer cette propriété");
+    }
+
     const { error } = await supabase
       .from('properties')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('owner_id', sessionData.session.user.id); // Double vérification
 
     if (error) {
       throw error;
@@ -159,14 +183,15 @@ export const deleteProperty = async (id: string): Promise<boolean> => {
 
     toast({
       title: "Bien supprimé",
-      description: "Le bien immobilier a été supprimé avec succès",
+      description: `"${property.title}" a été supprimé de votre portefeuille`,
     });
 
     return true;
   } catch (error: any) {
+    console.error('Erreur lors de la suppression:', error);
     toast({
-      title: "Erreur",
-      description: "Impossible de supprimer ce bien immobilier",
+      title: "Erreur de suppression",
+      description: error.message || "Impossible de supprimer ce bien immobilier",
       variant: "destructive",
     });
     return false;

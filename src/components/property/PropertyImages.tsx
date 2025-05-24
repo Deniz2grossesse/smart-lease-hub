@@ -76,15 +76,15 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
       onImageDeleted(imageId);
       
       toast({
-        title: "Image supprimée avec succès",
-        description: "L'image a été supprimée de votre propriété",
+        title: "Image supprimée",
+        description: "L'image a été supprimée de votre propriété avec succès",
       });
 
     } catch (error: any) {
       console.error('Erreur lors de la suppression de l\'image:', error);
       toast({
         title: "Erreur de suppression",
-        description: error.message || "Impossible de supprimer cette image",
+        description: error.message || "Impossible de supprimer cette image. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {
@@ -97,7 +97,7 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
       <div>
         <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos</h3>
         <div className="p-8 border rounded-md flex flex-col items-center justify-center text-center">
-          <p className="text-muted-foreground mb-4">Aucune image disponible</p>
+          <p className="text-muted-foreground mb-4">Aucune image disponible pour cette propriété</p>
           <Button variant="outline" onClick={onEditClick}>
             <Upload className="h-4 w-4 mr-2" />
             Ajouter des photos
@@ -109,14 +109,19 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
 
   return (
     <div>
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos</h3>
+      <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos ({images.length})</h3>
       <div className="grid grid-cols-2 gap-2">
         {images.map((image, index) => (
           <div key={image.id} className="aspect-square relative overflow-hidden rounded-md group">
             <img 
               src={image.url} 
-              alt={`Photo ${index + 1}`} 
+              alt={`Photo ${index + 1} de la propriété`}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/placeholder.svg';
+                target.alt = 'Image non disponible';
+              }}
             />
             {image.is_primary && (
               <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
@@ -139,7 +144,7 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
                   <DialogHeader>
                     <DialogTitle>Supprimer cette image ?</DialogTitle>
                     <DialogDescription>
-                      Cette action est irréversible. L'image sera définitivement supprimée.
+                      Cette action est irréversible. L'image sera définitivement supprimée de cette propriété.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -151,7 +156,7 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
                       onClick={() => deleteImage(image.id, image.url)}
                       disabled={deletingImageId === image.id}
                     >
-                      {deletingImageId === image.id ? "Suppression..." : "Supprimer"}
+                      {deletingImageId === image.id ? "Suppression..." : "Supprimer définitivement"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

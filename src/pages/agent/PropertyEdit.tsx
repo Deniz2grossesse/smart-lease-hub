@@ -21,22 +21,21 @@ const AgentPropertyEdit = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [property, setProperty] = useState<any>(null);
 
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Accès non autorisé</h2>
-          <p>Veuillez vous connecter pour accéder à cette page.</p>
-        </div>
-      </div>
-    );
-  }
-
   useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Accès refusé",
+        description: "Vous devez être connecté comme agent pour modifier une propriété",
+        variant: "destructive"
+      });
+      navigate('/');
+      return;
+    }
+
     if (id) {
       fetchProperty(id);
     }
-  }, [id]);
+  }, [id, user, navigate]);
 
   const fetchProperty = async (propertyId: string) => {
     try {
@@ -45,25 +44,40 @@ const AgentPropertyEdit = () => {
         .from('properties')
         .select(`
           *,
-          property_images (*)
+          property_images (*),
+          profiles!properties_owner_id_fkey (
+            first_name,
+            last_name,
+            email
+          )
         `)
         .eq('id', propertyId)
         .single();
 
       if (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les détails de la propriété",
-          variant: "destructive"
-        });
+        if (error.code === 'PGRST116') {
+          toast({
+            title: "Propriété introuvable",
+            description: "Cette propriété n'existe pas ou a été supprimée",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Erreur de chargement",
+            description: "Impossible de charger les détails de la propriété",
+            variant: "destructive"
+          });
+        }
         navigate('/agent/properties');
         return;
       }
+
       setProperty(data);
     } catch (error) {
+      console.error('Erreur lors du chargement:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les détails de la propriété",
+        title: "Erreur système",
+        description: "Une erreur technique s'est produite lors du chargement",
         variant: "destructive"
       });
       navigate('/agent/properties');
@@ -74,7 +88,15 @@ const AgentPropertyEdit = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!property || !id) return;
+    if (!property || !id || !user) {
+      toast({
+        title: "Erreur d'authentification",
+        description: "Session expirée, veuillez vous reconnecter",
+        variant: "destructive"
+      });
+      navigate('/');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -95,24 +117,26 @@ const AgentPropertyEdit = () => {
         .eq('id', id);
 
       if (error) {
+        console.error('Erreur Supabase:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de modifier le bien",
+          title: "Erreur de modification",
+          description: "Impossible de sauvegarder les modifications. Veuillez réessayer.",
           variant: "destructive"
         });
         return;
       }
 
       toast({
-        title: "Succès",
-        description: "Le bien a été modifié avec succès",
+        title: "Bien modifié avec succès",
+        description: `Les modifications de "${property.title}" ont été enregistrées`
       });
       
       navigate('/agent/properties');
     } catch (error) {
+      console.error('Erreur lors de la modification:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de modifier le bien",
+        title: "Erreur système",
+        description: "Une erreur technique s'est produite lors de la sauvegarde",
         variant: "destructive"
       });
     } finally {
@@ -132,7 +156,7 @@ const AgentPropertyEdit = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="text-center py-8">
           <LoadingSpinner size="lg" />
-          <p className="mt-4">Chargement des données...</p>
+          <p className="mt-4 text-muted-foreground">Chargement des données de la propriété...</p>
         </div>
       </div>
     );
@@ -141,9 +165,13 @@ const AgentPropertyEdit = () => {
   if (!property) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="text-center">
+        <div className="text-center py-8">
           <h2 className="text-2xl font-bold mb-4">Propriété non trouvée</h2>
+          <p className="text-muted-foreground mb-6">
+            Cette propriété n'existe pas ou vous n'avez pas les droits pour y accéder.
+          </p>
           <Button onClick={() => navigate('/agent/properties')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Retour aux propriétés
           </Button>
         </div>
@@ -163,6 +191,11 @@ const AgentPropertyEdit = () => {
           Retour aux biens
         </Button>
         <h1 className="text-2xl font-bold">Modifier le bien</h1>
+        {property.profiles && (
+          <p className="text-muted-foreground">
+            Propriétaire: {property.profiles.first_name} {property.profiles.last_name}
+          </p>
+        )}
       </div>
 
       <Card className="max-w-2xl mx-auto">
@@ -180,6 +213,7 @@ const AgentPropertyEdit = () => {
                 required
                 minLength={5}
                 maxLength={100}
+                disabled={isLoading}
               />
             </div>
 
@@ -189,7 +223,7 @@ const AgentPropertyEdit = () => {
                 <Select
                   value={property.property_type || ''}
                   onValueChange={(value) => handleInputChange('property_type', value)}
-                  required
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -213,6 +247,7 @@ const AgentPropertyEdit = () => {
                   value={property.rooms || 1}
                   onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -226,6 +261,7 @@ const AgentPropertyEdit = () => {
                 required
                 minLength={10}
                 maxLength={200}
+                disabled={isLoading}
               />
             </div>
 
@@ -239,6 +275,7 @@ const AgentPropertyEdit = () => {
                   required
                   minLength={2}
                   maxLength={50}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -251,6 +288,7 @@ const AgentPropertyEdit = () => {
                   required
                   pattern="[0-9]{5}"
                   title="Le code postal doit contenir 5 chiffres"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -267,6 +305,7 @@ const AgentPropertyEdit = () => {
                   value={property.area || 0}
                   onChange={(e) => handleInputChange('area', parseFloat(e.target.value))}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -280,6 +319,7 @@ const AgentPropertyEdit = () => {
                   value={property.price || 0}
                   onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -292,6 +332,8 @@ const AgentPropertyEdit = () => {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={4}
                 maxLength={2000}
+                disabled={isLoading}
+                placeholder="Décrivez les caractéristiques du bien..."
               />
               <p className="text-sm text-gray-500 mt-1">
                 {(property.description || '').length}/2000 caractères
