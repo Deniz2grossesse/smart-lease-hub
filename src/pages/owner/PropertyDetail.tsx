@@ -3,18 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Edit, Trash, Upload } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Upload } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PropertyImages from "@/components/property/PropertyImages";
+import PropertyHeader from "@/components/property/PropertyHeader";
+import PropertyDetailsTab from "@/components/property/PropertyDetailsTab";
+import PropertyTenantsTab from "@/components/property/PropertyTenantsTab";
+import PropertyDocumentsTab from "@/components/property/PropertyDocumentsTab";
+import PropertyEditForm from "@/components/property/PropertyEditForm";
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +35,6 @@ const PropertyDetail = () => {
       try {
         setLoading(true);
         
-        // Récupérer les détails de la propriété avec vérification du propriétaire
         const { data, error } = await supabase
           .from("properties")
           .select(`
@@ -322,7 +320,6 @@ const PropertyDetail = () => {
             <AlertDescription>Cette propriété n'existe pas ou vous n'avez pas les droits d'accès</AlertDescription>
           </Alert>
           <Button className="mt-4" onClick={() => navigate('/owner/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
             Retour au tableau de bord
           </Button>
         </div>
@@ -333,50 +330,13 @@ const PropertyDetail = () => {
   return (
     <Layout>
       <div className="container mx-auto py-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={() => navigate('/owner/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
-          <h1 className="text-3xl font-bold">{property.title}</h1>
-          {!editing && (
-            <div className="ml-auto space-x-2">
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash className="h-4 w-4 mr-2" />
-                    Supprimer
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Supprimer cette propriété ?</DialogTitle>
-                    <DialogDescription>
-                      Cette action est irréversible. La propriété sera définitivement supprimée de votre portefeuille.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => document.querySelector<HTMLButtonElement>("[data-dismiss-delete-dialog]")?.click()}>
-                      Annuler
-                    </Button>
-                    <Button variant="destructive" onClick={handleDelete}>
-                      Supprimer définitivement
-                    </Button>
-                    <button
-                      type="button"
-                      className="hidden"
-                      data-dismiss-delete-dialog
-                    ></button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-        </div>
+        <PropertyHeader 
+          property={property}
+          editing={editing}
+          onBackClick={() => navigate('/owner/dashboard')}
+          onEditClick={() => setEditing(true)}
+          onDeleteClick={handleDelete}
+        />
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
@@ -392,209 +352,21 @@ const PropertyDetail = () => {
               </CardHeader>
               <CardContent>
                 {editing ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="title">Titre</Label>
-                        <Input 
-                          id="title" 
-                          name="title" 
-                          value={formData.title} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="property_type">Type de bien</Label>
-                        <Select 
-                          value={formData.property_type} 
-                          onValueChange={(value) => handleSelectChange("property_type", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="apartment">Appartement</SelectItem>
-                            <SelectItem value="house">Maison</SelectItem>
-                            <SelectItem value="studio">Studio</SelectItem>
-                            <SelectItem value="loft">Loft</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="address">Adresse</Label>
-                      <Input 
-                        id="address" 
-                        name="address" 
-                        value={formData.address} 
-                        onChange={handleChange} 
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="city">Ville</Label>
-                        <Input 
-                          id="city" 
-                          name="city" 
-                          value={formData.city} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="postal_code">Code postal</Label>
-                        <Input 
-                          id="postal_code" 
-                          name="postal_code" 
-                          value={formData.postal_code} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="rooms">Nombre de pièces</Label>
-                        <Input 
-                          id="rooms" 
-                          name="rooms" 
-                          type="number" 
-                          min="1" 
-                          value={formData.rooms} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="area">Surface (m²)</Label>
-                        <Input 
-                          id="area" 
-                          name="area" 
-                          type="number" 
-                          min="1" 
-                          value={formData.area} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="price">Loyer (€)</Label>
-                        <Input 
-                          id="price" 
-                          name="price" 
-                          type="number" 
-                          min="1" 
-                          value={formData.price} 
-                          onChange={handleChange} 
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea 
-                        id="description" 
-                        name="description" 
-                        value={formData.description} 
-                        onChange={handleChange} 
-                        placeholder="Décrivez votre bien immobilier..."
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Disponibilité</Label>
-                      <Select 
-                        value={formData.is_available.toString()} 
-                        onValueChange={(value) => handleSelectChange("is_available", value === "true")}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="true">Disponible</SelectItem>
-                          <SelectItem value="false">Loué</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="images">Ajouter des photos</Label>
-                      <Input 
-                        id="images" 
-                        type="file" 
-                        multiple 
-                        accept="image/*"
-                        onChange={handleImageChange} 
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-2 mt-6">
-                      <Button variant="outline" onClick={() => setEditing(false)}>
-                        Annuler
-                      </Button>
-                      <Button onClick={handleSave}>
-                        Enregistrer
-                      </Button>
-                    </div>
-                  </div>
+                  <PropertyEditForm 
+                    formData={formData}
+                    onChange={handleChange}
+                    onSelectChange={handleSelectChange}
+                    onImageChange={handleImageChange}
+                    onSave={handleSave}
+                    onCancel={() => setEditing(false)}
+                  />
                 ) : (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      <div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Type de bien</h3>
-                            <p className="mt-1">{property.property_type === "apartment" ? "Appartement" : 
-                                               property.property_type === "house" ? "Maison" : 
-                                               property.property_type === "studio" ? "Studio" : 
-                                               property.property_type === "loft" ? "Loft" : 
-                                               property.property_type}</p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Disponibilité</h3>
-                            <p className="mt-1">
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                                property.is_available ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
-                              }`}>
-                                {property.is_available ? "Disponible" : "Loué"}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <h3 className="text-sm font-medium text-muted-foreground">Adresse</h3>
-                          <p className="mt-1">{property.address}</p>
-                          <p>{property.city} {property.postal_code}</p>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-4 mt-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Pièces</h3>
-                            <p className="mt-1">{property.rooms}</p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Surface</h3>
-                            <p className="mt-1">{property.area} m²</p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Loyer</h3>
-                            <p className="mt-1">{property.price} €/mois</p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
-                          {property.description && property.description.trim() ? (
-                            <p className="mt-1 whitespace-pre-wrap">{property.description}</p>
-                          ) : (
-                            <p className="mt-1 text-muted-foreground italic">Pas de description disponible</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <PropertyImages 
-                          images={property.property_images || []}
-                          propertyId={property.id}
-                          onImageDeleted={handleImageDeleted}
-                          onEditClick={() => setEditing(true)}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <PropertyDetailsTab 
+                    property={property}
+                    editing={editing}
+                    onEditClick={() => setEditing(true)}
+                    onImageDeleted={handleImageDeleted}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -606,48 +378,10 @@ const PropertyDetail = () => {
                 <CardTitle>Locataires</CardTitle>
               </CardHeader>
               <CardContent>
-                {tenants.length > 0 ? (
-                  <div className="rounded-md border">
-                    <table className="min-w-full divide-y divide-border">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Nom</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Téléphone</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date d'entrée</th>
-                          <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {tenants.map((tenant) => (
-                          <tr key={tenant.id}>
-                            <td className="px-4 py-3 text-sm">
-                              {tenant.first_name} {tenant.last_name}
-                            </td>
-                            <td className="px-4 py-3 text-sm">{tenant.email}</td>
-                            <td className="px-4 py-3 text-sm">{tenant.phone || "Non renseigné"}</td>
-                            <td className="px-4 py-3 text-sm">Non défini</td>
-                            <td className="px-4 py-3 text-sm text-right">
-                              <Button variant="outline" size="sm" onClick={() => navigate(`/owner/tenant/${tenant.id}`)}>
-                                Détails
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">Aucun locataire n'est actuellement associé à ce bien</p>
-                    {!property.is_available && (
-                      <p className="text-sm text-muted-foreground mt-2">Ce bien est marqué comme loué, mais aucun locataire n'y est associé.</p>
-                    )}
-                    <Button className="mt-4">
-                      Associer un locataire
-                    </Button>
-                  </div>
-                )}
+                <PropertyTenantsTab 
+                  tenants={tenants}
+                  property={property}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -664,52 +398,10 @@ const PropertyDetail = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {documents.length > 0 ? (
-                  <div className="rounded-md border">
-                    <table className="min-w-full divide-y divide-border">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Nom</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Type</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                          <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {documents.map((doc) => (
-                          <tr key={doc.id}>
-                            <td className="px-4 py-3 text-sm">{doc.name}</td>
-                            <td className="px-4 py-3 text-sm">
-                              <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                {doc.type}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              {new Date(doc.created_at).toLocaleDateString('fr-FR')}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => downloadDocument(doc)}
-                              >
-                                Télécharger
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">Aucun document n'est associé à ce bien</p>
-                    <Button className="mt-4">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Ajouter un document
-                    </Button>
-                  </div>
-                )}
+                <PropertyDocumentsTab 
+                  documents={documents}
+                  onDownloadDocument={downloadDocument}
+                />
               </CardContent>
             </Card>
           </TabsContent>
