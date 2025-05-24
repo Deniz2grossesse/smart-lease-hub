@@ -20,6 +20,11 @@ import TenantDetail from "./pages/owner/TenantDetail";
 
 // Agent Routes
 import AgentDashboard from "./pages/agent/Dashboard";
+import AgentAlerts from "./pages/agent/Alerts";
+import AgentApplications from "./pages/agent/Applications";
+import AgentProperties from "./pages/agent/Properties";
+import AgentPayments from "./pages/agent/Payments";
+import AgentStats from "./pages/agent/Stats";
 
 const queryClient = new QueryClient();
 
@@ -138,7 +143,7 @@ const App = () => (
               path="/agent/alerts" 
               element={
                 <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
+                  <AgentAlerts />
                 </ProtectedRoute>
               } 
             />
@@ -146,7 +151,7 @@ const App = () => (
               path="/agent/applications" 
               element={
                 <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
+                  <AgentApplications />
                 </ProtectedRoute>
               } 
             />
@@ -154,7 +159,7 @@ const App = () => (
               path="/agent/properties" 
               element={
                 <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
+                  <AgentProperties />
                 </ProtectedRoute>
               } 
             />
@@ -162,7 +167,7 @@ const App = () => (
               path="/agent/payments" 
               element={
                 <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
+                  <AgentPayments />
                 </ProtectedRoute>
               } 
             />
@@ -170,7 +175,7 @@ const App = () => (
               path="/agent/stats" 
               element={
                 <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
+                  <AgentStats />
                 </ProtectedRoute>
               } 
             />
