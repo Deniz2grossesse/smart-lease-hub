@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const { redirectBasedOnUserType } = useAuthNavigation();
   const { profile, setProfile, fetchProfile } = useProfileManager();
-  const { signIn, signUp, signOut, createTestUsers } = useAuthActions(profile, redirectBasedOnUserType);
+  const { signIn, signInWithGoogle, signInWithApple, signUp, signOut, createTestUsers } = useAuthActions(profile, redirectBasedOnUserType);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -63,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading, 
       isLoading: loading,
       signIn, 
+      signInWithGoogle,
+      signInWithApple,
       signUp, 
       signOut, 
       createTestUsers 

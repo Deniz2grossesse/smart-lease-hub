@@ -12,7 +12,6 @@ export const useAuthActions = (
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("Attempting sign in for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) throw error;
@@ -22,16 +21,55 @@ export const useAuthActions = (
         description: "Vous êtes maintenant connecté"
       });
       
-      console.log("Sign in successful, user data:", data.user?.id);
-      
       if (data.user && profile) {
         redirectCallback(profile.type);
       }
       
     } catch (error: any) {
-      console.error("Sign in error:", error.message);
       toast({
         title: "Erreur de connexion",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      
+    } catch (error: any) {
+      toast({
+        title: "Erreur de connexion Google",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      
+    } catch (error: any) {
+      toast({
+        title: "Erreur de connexion Apple",
         description: error.message,
         variant: "destructive"
       });
@@ -152,12 +190,13 @@ export const useAuthActions = (
         description: error.message,
         variant: "destructive"
       });
-      console.error("Erreur lors de la création des utilisateurs de test:", error);
     }
   };
 
   return {
     signIn,
+    signInWithGoogle,
+    signInWithApple,
     signUp,
     signOut,
     createTestUsers
