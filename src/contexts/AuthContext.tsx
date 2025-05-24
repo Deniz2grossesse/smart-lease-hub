@@ -60,8 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       profile, 
+      userProfile: profile, // Add alias
       session, 
       loading, 
+      isLoading: loading, // Add alias
       signIn, 
       signUp, 
       signOut, 

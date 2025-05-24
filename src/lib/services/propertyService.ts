@@ -1,8 +1,10 @@
-
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-import { PropertyFormData, Property } from '@/lib/types/property';
+import { Property, PropertyFormData } from '@/lib/types/property';
 import { validatePropertyForm, sanitizeInput } from '@/lib/utils/validation';
+
+// Export PropertyFormData from types
+export { PropertyFormData } from '@/lib/types/property';
 
 export const createProperty = async (propertyData: PropertyFormData): Promise<Property> => {
   try {
@@ -114,7 +116,7 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       description: "Votre bien a été ajouté à votre portefeuille.",
     });
     
-    return completeProperty;
+    return completeProperty as Property;
   } catch (error: any) {
     console.error("Erreur lors de la création de la propriété:", error);
     toast({
@@ -141,7 +143,7 @@ export const fetchProperties = async (): Promise<Property[]> => {
       throw error;
     }
 
-    return properties || [];
+    return (properties || []) as Property[];
   } catch (error: any) {
     console.error("Erreur lors de la récupération des propriétés:", error);
     toast({

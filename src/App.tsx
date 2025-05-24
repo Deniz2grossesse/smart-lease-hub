@@ -1,9 +1,9 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Layout from '@/components/layout/Layout';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
 // Pages publiques
 import Index from '@/pages/Index';

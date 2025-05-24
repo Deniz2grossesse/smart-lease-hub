@@ -16,8 +16,10 @@ export interface UserProfile {
 export interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
+  userProfile: UserProfile | null; // Add alias for backward compatibility
   session: Session | null;
   loading: boolean;
+  isLoading: boolean; // Add alias for backward compatibility
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userType: UserType, firstName: string, lastName: string, phone?: string) => Promise<void>;
   signOut: () => Promise<void>;

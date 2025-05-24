@@ -33,7 +33,7 @@ const AgentProperties = () => {
           console.error('Error fetching properties:', error);
           throw error;
         }
-        return data || [];
+        return (data || []) as Property[];
       } catch (error) {
         console.error('Error in properties query:', error);
         throw error;
