@@ -14,6 +14,7 @@ import AgentDashboard from '@/pages/agent/Dashboard';
 import AgentProperties from '@/pages/agent/Properties';
 import AgentPropertyNew from '@/pages/agent/PropertyNew';
 import AgentPropertyDetail from '@/pages/agent/PropertyDetail';
+import AgentPropertyEdit from '@/pages/agent/PropertyEdit';
 import AgentApplications from '@/pages/agent/Applications';
 import AgentPayments from '@/pages/agent/Payments';
 import AgentAlerts from '@/pages/agent/Alerts';
@@ -21,6 +22,8 @@ import AgentStats from '@/pages/agent/Stats';
 
 // Pages Owner
 import OwnerDashboard from '@/pages/owner/Dashboard';
+import OwnerProperties from '@/pages/owner/Properties';
+import OwnerPropertyNew from '@/pages/owner/PropertyNew';
 import OwnerPropertyEdit from '@/pages/owner/PropertyEdit';
 import OwnerPropertyDetail from '@/pages/owner/PropertyDetail';
 import OwnerTenants from '@/pages/owner/Tenants';
@@ -54,6 +57,7 @@ function App() {
                     <Route path="properties" element={<AgentProperties />} />
                     <Route path="properties/new" element={<AgentPropertyNew />} />
                     <Route path="properties/:id" element={<AgentPropertyDetail />} />
+                    <Route path="properties/:id/edit" element={<AgentPropertyEdit />} />
                     <Route path="applications" element={<AgentApplications />} />
                     <Route path="payments" element={<AgentPayments />} />
                     <Route path="alerts" element={<AgentAlerts />} />
@@ -69,6 +73,8 @@ function App() {
                 <Layout>
                   <Routes>
                     <Route path="dashboard" element={<OwnerDashboard />} />
+                    <Route path="properties" element={<OwnerProperties />} />
+                    <Route path="properties/new" element={<OwnerPropertyNew />} />
                     <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
                     <Route path="properties/:id" element={<OwnerPropertyDetail />} />
                     <Route path="tenants" element={<OwnerTenants />} />

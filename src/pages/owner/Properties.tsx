@@ -7,11 +7,16 @@ import { Building, Plus, Edit, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
-const AgentProperties = () => {
+const OwnerProperties = () => {
+  const { user } = useAuth();
+
   const { data: properties = [], isLoading } = useQuery({
-    queryKey: ['agent-properties'],
+    queryKey: ['owner-properties', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -19,20 +24,22 @@ const AgentProperties = () => {
           property_images (*),
           property_applications (count)
         `)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!user?.id
   });
 
   return (
     <Layout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Gestion des biens</h1>
+          <h1 className="text-3xl font-bold">Mes biens immobiliers</h1>
           <Button asChild>
-            <Link to="/agent/properties/new">
+            <Link to="/owner/properties/new">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un bien
             </Link>
@@ -47,6 +54,9 @@ const AgentProperties = () => {
               <CardContent className="p-6 text-center">
                 <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">Aucun bien pour le moment</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Ajoutez votre premier bien immobilier
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -88,13 +98,13 @@ const AgentProperties = () => {
                   
                   <div className="flex gap-2 mt-4">
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/agent/properties/${property.id}`}>
+                      <Link to={`/owner/properties/${property.id}`}>
                         <Eye className="mr-2 h-4 w-4" />
                         Voir
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/agent/properties/${property.id}/edit`}>
+                      <Link to={`/owner/properties/${property.id}/edit`}>
                         <Edit className="mr-2 h-4 w-4" />
                         Modifier
                       </Link>
@@ -110,4 +120,4 @@ const AgentProperties = () => {
   );
 };
 
-export default AgentProperties;
+export default OwnerProperties;

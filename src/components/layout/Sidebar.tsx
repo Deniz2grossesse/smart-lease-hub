@@ -43,14 +43,14 @@ const Sidebar = () => {
 
   const menuItems = {
     tenant: [
-      { title: "Accueil", path: "/", icon: Home },
+      { title: "Accueil", path: "/tenant/dashboard", icon: Home },
       { title: "Mon compte", path: "/tenant/account", icon: User },
       { title: "Mon dossier", path: "/tenant/application", icon: FileText },
       { title: "Mes alertes", path: "/tenant/alerts", icon: Bell },
       { title: "Mes candidatures", path: "/tenant/applications", icon: Folder },
     ],
     owner: [
-      { title: "Accueil", path: "/", icon: Home },
+      { title: "Tableau de bord", path: "/owner/dashboard", icon: Home },
       { title: "Mes biens", path: "/owner/properties", icon: Building },
       { title: "Mes locataires", path: "/owner/tenants", icon: User },
       { title: "Mes documents", path: "/owner/documents", icon: FileText },
