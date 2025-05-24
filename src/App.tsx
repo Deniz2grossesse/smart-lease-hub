@@ -75,8 +75,8 @@ function App() {
                     <Route path="dashboard" element={<OwnerDashboard />} />
                     <Route path="properties" element={<OwnerProperties />} />
                     <Route path="properties/new" element={<OwnerPropertyNew />} />
-                    <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
                     <Route path="properties/:id" element={<OwnerPropertyDetail />} />
+                    <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
                     <Route path="tenants" element={<OwnerTenants />} />
                     <Route path="tenants/:id" element={<OwnerTenantDetail />} />
                     <Route path="documents" element={<OwnerDocuments />} />

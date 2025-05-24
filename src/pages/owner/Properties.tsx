@@ -33,6 +33,16 @@ const OwnerProperties = () => {
     enabled: !!user?.id
   });
 
+  if (!user) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-6">
+          <div className="text-center">Accès non autorisé. Veuillez vous connecter.</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto py-6">
@@ -48,7 +58,7 @@ const OwnerProperties = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <div>Chargement...</div>
+            <div className="col-span-full text-center">Chargement...</div>
           ) : properties.length === 0 ? (
             <Card className="col-span-full">
               <CardContent className="p-6 text-center">

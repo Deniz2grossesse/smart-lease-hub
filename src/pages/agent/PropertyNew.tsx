@@ -9,9 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createProperty, PropertyFormData } from '@/lib/services/propertyService';
 import { toast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PropertyNew = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>({
     title: '',
@@ -25,6 +28,10 @@ const PropertyNew = () => {
     description: '',
     images: []
   });
+
+  if (!user) {
+    return <div>Accès non autorisé</div>;
+  }
 
   const handleInputChange = (field: keyof PropertyFormData, value: any) => {
     setFormData(prev => ({
@@ -49,12 +56,17 @@ const PropertyNew = () => {
     try {
       await createProperty(formData);
       toast({
-        title: "Propriété créée avec succès",
-        description: "La nouvelle propriété a été ajoutée à votre portefeuille."
+        title: "Succès",
+        description: "La propriété a été créée avec succès.",
       });
       navigate('/agent/properties');
     } catch (error) {
       console.error('Erreur lors de la création:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de la propriété.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +75,14 @@ const PropertyNew = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/agent/properties')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour aux biens
+        </Button>
         <h1 className="text-2xl font-bold">Nouvelle Propriété</h1>
         <p className="text-gray-600">Ajoutez une nouvelle propriété à votre portefeuille</p>
       </div>
@@ -75,7 +95,7 @@ const PropertyNew = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="title">Titre</Label>
+                <Label htmlFor="title">Titre *</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -86,8 +106,8 @@ const PropertyNew = () => {
               </div>
 
               <div>
-                <Label htmlFor="property_type">Type de bien</Label>
-                <Select onValueChange={(value) => handleInputChange('property_type', value)}>
+                <Label htmlFor="property_type">Type de bien *</Label>
+                <Select onValueChange={(value) => handleInputChange('property_type', value)} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez un type" />
                   </SelectTrigger>
@@ -102,7 +122,7 @@ const PropertyNew = () => {
             </div>
 
             <div>
-              <Label htmlFor="address">Adresse</Label>
+              <Label htmlFor="address">Adresse *</Label>
               <Input
                 id="address"
                 value={formData.address}
@@ -114,7 +134,7 @@ const PropertyNew = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="city">Ville</Label>
+                <Label htmlFor="city">Ville *</Label>
                 <Input
                   id="city"
                   value={formData.city}
@@ -125,7 +145,7 @@ const PropertyNew = () => {
               </div>
 
               <div>
-                <Label htmlFor="postal_code">Code postal</Label>
+                <Label htmlFor="postal_code">Code postal *</Label>
                 <Input
                   id="postal_code"
                   value={formData.postal_code}
@@ -138,7 +158,7 @@ const PropertyNew = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="rooms">Nombre de pièces</Label>
+                <Label htmlFor="rooms">Nombre de pièces *</Label>
                 <Input
                   id="rooms"
                   type="number"
@@ -150,7 +170,7 @@ const PropertyNew = () => {
               </div>
 
               <div>
-                <Label htmlFor="area">Surface (m²)</Label>
+                <Label htmlFor="area">Surface (m²) *</Label>
                 <Input
                   id="area"
                   type="number"
@@ -162,7 +182,7 @@ const PropertyNew = () => {
               </div>
 
               <div>
-                <Label htmlFor="price">Loyer (€/mois)</Label>
+                <Label htmlFor="price">Loyer (€/mois) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -210,7 +230,7 @@ const PropertyNew = () => {
                 Annuler
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Création...' : 'Créer la propriété'}
+                {isLoading ? 'Création en cours...' : 'Créer la propriété'}
               </Button>
             </div>
           </form>

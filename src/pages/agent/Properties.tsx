@@ -7,8 +7,11 @@ import { Building, Plus, Edit, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AgentProperties = () => {
+  const { user } = useAuth();
+
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['agent-properties'],
     queryFn: async () => {
@@ -25,6 +28,10 @@ const AgentProperties = () => {
       return data;
     }
   });
+
+  if (!user) {
+    return <div>Accès non autorisé</div>;
+  }
 
   return (
     <Layout>

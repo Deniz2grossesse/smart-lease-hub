@@ -9,14 +9,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AgentPropertyEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [property, setProperty] = useState<any>(null);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+
+  if (!user) {
+    return <div>Accès non autorisé</div>;
+  }
 
   useEffect(() => {
     if (id) {
@@ -26,6 +32,7 @@ const AgentPropertyEdit = () => {
 
   const fetchProperty = async (propertyId: string) => {
     try {
+      setIsLoadingData(true);
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -44,6 +51,9 @@ const AgentPropertyEdit = () => {
         description: "Impossible de charger les détails de la propriété",
         variant: "destructive"
       });
+      navigate('/agent/properties');
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -96,10 +106,18 @@ const AgentPropertyEdit = () => {
     }));
   };
 
+  if (isLoadingData) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center">Chargement des données...</div>
+      </div>
+    );
+  }
+
   if (!property) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="text-center">Chargement...</div>
+        <div className="text-center">Propriété non trouvée</div>
       </div>
     );
   }
@@ -125,7 +143,7 @@ const AgentPropertyEdit = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="title">Titre de l'annonce</Label>
+              <Label htmlFor="title">Titre de l'annonce *</Label>
               <Input
                 id="title"
                 value={property.title}
@@ -136,7 +154,7 @@ const AgentPropertyEdit = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="property_type">Type de bien</Label>
+                <Label htmlFor="property_type">Type de bien *</Label>
                 <Select
                   value={property.property_type}
                   onValueChange={(value) => handleInputChange('property_type', value)}
@@ -155,7 +173,7 @@ const AgentPropertyEdit = () => {
               </div>
 
               <div>
-                <Label htmlFor="rooms">Nombre de pièces</Label>
+                <Label htmlFor="rooms">Nombre de pièces *</Label>
                 <Input
                   id="rooms"
                   type="number"
@@ -168,7 +186,7 @@ const AgentPropertyEdit = () => {
             </div>
 
             <div>
-              <Label htmlFor="address">Adresse</Label>
+              <Label htmlFor="address">Adresse *</Label>
               <Input
                 id="address"
                 value={property.address}
@@ -179,7 +197,7 @@ const AgentPropertyEdit = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="city">Ville</Label>
+                <Label htmlFor="city">Ville *</Label>
                 <Input
                   id="city"
                   value={property.city}
@@ -189,7 +207,7 @@ const AgentPropertyEdit = () => {
               </div>
 
               <div>
-                <Label htmlFor="postal_code">Code postal</Label>
+                <Label htmlFor="postal_code">Code postal *</Label>
                 <Input
                   id="postal_code"
                   value={property.postal_code}
@@ -201,7 +219,7 @@ const AgentPropertyEdit = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="area">Surface (m²)</Label>
+                <Label htmlFor="area">Surface (m²) *</Label>
                 <Input
                   id="area"
                   type="number"
@@ -213,7 +231,7 @@ const AgentPropertyEdit = () => {
               </div>
 
               <div>
-                <Label htmlFor="price">Loyer mensuel (€)</Label>
+                <Label htmlFor="price">Loyer mensuel (€) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -240,6 +258,7 @@ const AgentPropertyEdit = () => {
                 type="button"
                 variant="outline"
                 onClick={() => navigate('/agent/properties')}
+                disabled={isLoading}
               >
                 Annuler
               </Button>
