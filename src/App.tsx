@@ -67,7 +67,7 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Routes Owner */}
+            {/* Routes Owner - URLs uniformisées avec /properties/:id */}
             <Route path="/owner/*" element={
               <ProtectedRoute userTypes={['owner']}>
                 <Layout>

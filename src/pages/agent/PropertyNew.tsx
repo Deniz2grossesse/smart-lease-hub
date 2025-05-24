@@ -30,7 +30,14 @@ const PropertyNew = () => {
   });
 
   if (!user) {
-    return <div>Accès non autorisé</div>;
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Accès non autorisé</h2>
+          <p>Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
   }
 
   const handleInputChange = (field: keyof PropertyFormData, value: any) => {
@@ -99,9 +106,11 @@ const PropertyNew = () => {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  onChange={(e) => handleInputChange('title', e.target.value.trim())}
                   placeholder="Appartement 3 pièces centre-ville"
                   required
+                  minLength={5}
+                  maxLength={100}
                 />
               </div>
 
@@ -126,9 +135,11 @@ const PropertyNew = () => {
               <Input
                 id="address"
                 value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
+                onChange={(e) => handleInputChange('address', e.target.value.trim())}
                 placeholder="123 rue de la Paix"
                 required
+                minLength={10}
+                maxLength={200}
               />
             </div>
 
@@ -138,9 +149,11 @@ const PropertyNew = () => {
                 <Input
                   id="city"
                   value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  onChange={(e) => handleInputChange('city', e.target.value.trim())}
                   placeholder="Paris"
                   required
+                  minLength={2}
+                  maxLength={50}
                 />
               </div>
 
@@ -149,9 +162,11 @@ const PropertyNew = () => {
                 <Input
                   id="postal_code"
                   value={formData.postal_code}
-                  onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                  onChange={(e) => handleInputChange('postal_code', e.target.value.trim())}
                   placeholder="75001"
                   required
+                  pattern="[0-9]{5}"
+                  title="Le code postal doit contenir 5 chiffres"
                 />
               </div>
             </div>
@@ -163,6 +178,7 @@ const PropertyNew = () => {
                   id="rooms"
                   type="number"
                   min="1"
+                  max="20"
                   value={formData.rooms}
                   onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
                   required
@@ -175,6 +191,8 @@ const PropertyNew = () => {
                   id="area"
                   type="number"
                   min="1"
+                  max="10000"
+                  step="0.1"
                   value={formData.area}
                   onChange={(e) => handleInputChange('area', parseFloat(e.target.value))}
                   required
@@ -187,6 +205,7 @@ const PropertyNew = () => {
                   id="price"
                   type="number"
                   min="0"
+                  max="50000"
                   value={formData.price}
                   onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
                   required
@@ -199,10 +218,14 @@ const PropertyNew = () => {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) => handleInputChange('description', e.target.value.trim())}
                 placeholder="Description détaillée de la propriété..."
                 rows={4}
+                maxLength={2000}
               />
+              <p className="text-sm text-gray-500 mt-1">
+                {formData.description.length}/2000 caractères
+              </p>
             </div>
 
             <div>
@@ -216,7 +239,7 @@ const PropertyNew = () => {
                 className="cursor-pointer"
               />
               <p className="text-sm text-gray-500 mt-1">
-                Vous pouvez sélectionner plusieurs images
+                Vous pouvez sélectionner plusieurs images (formats acceptés: JPG, PNG, WebP)
               </p>
             </div>
 
@@ -230,7 +253,14 @@ const PropertyNew = () => {
                 Annuler
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Création en cours...' : 'Créer la propriété'}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Création en cours...
+                  </>
+                ) : (
+                  'Créer la propriété'
+                )}
               </Button>
             </div>
           </form>

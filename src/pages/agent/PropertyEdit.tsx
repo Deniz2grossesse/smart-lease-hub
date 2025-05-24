@@ -21,7 +21,14 @@ const AgentPropertyEdit = () => {
   const [property, setProperty] = useState<any>(null);
 
   if (!user) {
-    return <div>Accès non autorisé</div>;
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Accès non autorisé</h2>
+          <p>Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
   }
 
   useEffect(() => {
@@ -42,7 +49,16 @@ const AgentPropertyEdit = () => {
         .eq('id', propertyId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching property:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails de la propriété",
+          variant: "destructive"
+        });
+        navigate('/agent/properties');
+        return;
+      }
       setProperty(data);
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
@@ -67,19 +83,27 @@ const AgentPropertyEdit = () => {
       const { error } = await supabase
         .from('properties')
         .update({
-          title: property.title,
-          address: property.address,
-          city: property.city,
-          postal_code: property.postal_code,
+          title: property.title?.trim(),
+          address: property.address?.trim(),
+          city: property.city?.trim(),
+          postal_code: property.postal_code?.trim(),
           property_type: property.property_type,
           rooms: property.rooms,
           area: property.area,
           price: property.price,
-          description: property.description,
+          description: property.description?.trim(),
         })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating property:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de modifier le bien",
+          variant: "destructive"
+        });
+        return;
+      }
 
       toast({
         title: "Succès",
@@ -109,7 +133,10 @@ const AgentPropertyEdit = () => {
   if (isLoadingData) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="text-center">Chargement des données...</div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Chargement des données...</p>
+        </div>
       </div>
     );
   }
@@ -117,7 +144,12 @@ const AgentPropertyEdit = () => {
   if (!property) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="text-center">Propriété non trouvée</div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Propriété non trouvée</h2>
+          <Button onClick={() => navigate('/agent/properties')}>
+            Retour aux propriétés
+          </Button>
+        </div>
       </div>
     );
   }
@@ -146,9 +178,11 @@ const AgentPropertyEdit = () => {
               <Label htmlFor="title">Titre de l'annonce *</Label>
               <Input
                 id="title"
-                value={property.title}
+                value={property.title || ''}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 required
+                minLength={5}
+                maxLength={100}
               />
             </div>
 
@@ -156,7 +190,7 @@ const AgentPropertyEdit = () => {
               <div>
                 <Label htmlFor="property_type">Type de bien *</Label>
                 <Select
-                  value={property.property_type}
+                  value={property.property_type || ''}
                   onValueChange={(value) => handleInputChange('property_type', value)}
                   required
                 >
@@ -178,7 +212,8 @@ const AgentPropertyEdit = () => {
                   id="rooms"
                   type="number"
                   min="1"
-                  value={property.rooms}
+                  max="20"
+                  value={property.rooms || 1}
                   onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
                   required
                 />
@@ -189,9 +224,11 @@ const AgentPropertyEdit = () => {
               <Label htmlFor="address">Adresse *</Label>
               <Input
                 id="address"
-                value={property.address}
+                value={property.address || ''}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 required
+                minLength={10}
+                maxLength={200}
               />
             </div>
 
@@ -200,9 +237,11 @@ const AgentPropertyEdit = () => {
                 <Label htmlFor="city">Ville *</Label>
                 <Input
                   id="city"
-                  value={property.city}
+                  value={property.city || ''}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   required
+                  minLength={2}
+                  maxLength={50}
                 />
               </div>
 
@@ -210,9 +249,11 @@ const AgentPropertyEdit = () => {
                 <Label htmlFor="postal_code">Code postal *</Label>
                 <Input
                   id="postal_code"
-                  value={property.postal_code}
+                  value={property.postal_code || ''}
                   onChange={(e) => handleInputChange('postal_code', e.target.value)}
                   required
+                  pattern="[0-9]{5}"
+                  title="Le code postal doit contenir 5 chiffres"
                 />
               </div>
             </div>
@@ -224,7 +265,9 @@ const AgentPropertyEdit = () => {
                   id="area"
                   type="number"
                   min="1"
-                  value={property.area}
+                  max="10000"
+                  step="0.1"
+                  value={property.area || 0}
                   onChange={(e) => handleInputChange('area', parseFloat(e.target.value))}
                   required
                 />
@@ -236,7 +279,8 @@ const AgentPropertyEdit = () => {
                   id="price"
                   type="number"
                   min="1"
-                  value={property.price}
+                  max="50000"
+                  value={property.price || 0}
                   onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
                   required
                 />
@@ -250,7 +294,11 @@ const AgentPropertyEdit = () => {
                 value={property.description || ''}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={4}
+                maxLength={2000}
               />
+              <p className="text-sm text-gray-500 mt-1">
+                {(property.description || '').length}/2000 caractères
+              </p>
             </div>
 
             <div className="flex gap-2 pt-4">
@@ -267,7 +315,14 @@ const AgentPropertyEdit = () => {
                 disabled={isLoading}
                 className="flex-1"
               >
-                {isLoading ? "Modification en cours..." : "Modifier le bien"}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Modification en cours...
+                  </>
+                ) : (
+                  "Modifier le bien"
+                )}
               </Button>
             </div>
           </form>
