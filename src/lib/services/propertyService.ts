@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -54,39 +53,37 @@ export const createProperty = async (propertyData: PropertyFormData) => {
         const filePath = `${property.id}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('property_images')
+          .from('property-images')
           .upload(filePath, image);
           
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Erreur upload:', uploadError);
+          continue; // Continue avec les autres images même si une échoue
+        }
         
         // Récupérer l'URL publique
         const { data: { publicUrl } } = supabase.storage
-          .from('property_images')
+          .from('property-images')
           .getPublicUrl(filePath);
           
         imageUrls.push(publicUrl);
       }
       
-      // 3. Mise à jour de la propriété avec les URLs des images via un champ personnalisé
-      // Nous utilisons metadata pour stocker les URL des images
+      // 3. Créer les entrées dans la table property_images
       if (imageUrls.length > 0) {
-        // Créons des entrées dans la table property_images
-        const imageEntries = imageUrls.map(url => ({
+        const imageEntries = imageUrls.map((url, index) => ({
           property_id: property.id,
           url: url,
-          is_primary: false // par défaut
+          is_primary: index === 0 // La première image est principale
         }));
-        
-        // Définissons la première image comme principale
-        if (imageEntries.length > 0) {
-          imageEntries[0].is_primary = true;
-        }
         
         const { error: imagesError } = await supabase
           .from('property_images')
           .insert(imageEntries);
           
-        if (imagesError) throw imagesError;
+        if (imagesError) {
+          console.error('Erreur lors de l\'ajout des images:', imagesError);
+        }
       }
     }
 

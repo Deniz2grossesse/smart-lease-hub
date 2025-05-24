@@ -1,197 +1,107 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import Layout from '@/components/layout/Layout';
 
-// Tenant Routes
-import TenantDashboard from "./pages/tenant/Dashboard";
-import TenantAccount from "./pages/tenant/Account";
-import TenantApplication from "./pages/tenant/Application";
-import TenantAlerts from "./pages/tenant/Alerts";
-import TenantApplications from "./pages/tenant/Applications";
+// Pages publiques
+import Index from '@/pages/Index';
+import NotFound from '@/pages/NotFound';
 
-// Owner Routes
-import OwnerDashboard from "./pages/owner/Dashboard";
-import OwnerTenants from "./pages/owner/Tenants";
-import OwnerDocuments from "./pages/owner/Documents";
-import PropertyDetail from "./pages/owner/PropertyDetail";
-import TenantDetail from "./pages/owner/TenantDetail";
+// Pages Agent
+import AgentDashboard from '@/pages/agent/Dashboard';
+import AgentProperties from '@/pages/agent/Properties';
+import AgentPropertyNew from '@/pages/agent/PropertyNew';
+import AgentPropertyDetail from '@/pages/agent/PropertyDetail';
+import AgentApplications from '@/pages/agent/Applications';
+import AgentPayments from '@/pages/agent/Payments';
+import AgentAlerts from '@/pages/agent/Alerts';
+import AgentStats from '@/pages/agent/Stats';
 
-// Agent Routes
-import AgentDashboard from "./pages/agent/Dashboard";
-import AgentAlerts from "./pages/agent/Alerts";
-import AgentApplications from "./pages/agent/Applications";
-import AgentProperties from "./pages/agent/Properties";
-import AgentPayments from "./pages/agent/Payments";
-import AgentStats from "./pages/agent/Stats";
+// Pages Owner
+import OwnerDashboard from '@/pages/owner/Dashboard';
+import OwnerPropertyEdit from '@/pages/owner/PropertyEdit';
+import OwnerPropertyDetail from '@/pages/owner/PropertyDetail';
+import OwnerTenants from '@/pages/owner/Tenants';
+import OwnerTenantDetail from '@/pages/owner/TenantDetail';
+import OwnerDocuments from '@/pages/owner/Documents';
 
-const queryClient = new QueryClient();
+// Pages Tenant
+import TenantDashboard from '@/pages/tenant/Dashboard';
+import TenantApplication from '@/pages/tenant/Application';
+import TenantApplications from '@/pages/tenant/Applications';
+import TenantAccount from '@/pages/tenant/Account';
+import TenantAlerts from '@/pages/tenant/Alerts';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+import './App.css';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
           <Routes>
+            {/* Page d'accueil publique */}
             <Route path="/" element={<Index />} />
             
-            {/* Tenant Routes */}
-            <Route 
-              path="/tenant/dashboard" 
-              element={
-                <ProtectedRoute userTypes={['tenant']}>
-                  <TenantDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tenant/account" 
-              element={
-                <ProtectedRoute userTypes={['tenant']}>
-                  <TenantAccount />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tenant/application" 
-              element={
-                <ProtectedRoute userTypes={['tenant']}>
-                  <TenantApplication />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tenant/alerts" 
-              element={
-                <ProtectedRoute userTypes={['tenant']}>
-                  <TenantAlerts />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tenant/applications" 
-              element={
-                <ProtectedRoute userTypes={['tenant']}>
-                  <TenantApplications />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Routes Agent */}
+            <Route path="/agent/*" element={
+              <ProtectedRoute allowedUserTypes={['agent']}>
+                <Layout>
+                  <Routes>
+                    <Route path="dashboard" element={<AgentDashboard />} />
+                    <Route path="properties" element={<AgentProperties />} />
+                    <Route path="properties/new" element={<AgentPropertyNew />} />
+                    <Route path="properties/:id" element={<AgentPropertyDetail />} />
+                    <Route path="applications" element={<AgentApplications />} />
+                    <Route path="payments" element={<AgentPayments />} />
+                    <Route path="alerts" element={<AgentAlerts />} />
+                    <Route path="stats" element={<AgentStats />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
             
-            {/* Owner Routes */}
-            <Route 
-              path="/owner/dashboard" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/properties" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/tenants" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerTenants />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/documents" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDocuments />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/property/:id" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <PropertyDetail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/tenant/:id" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <TenantDetail />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Routes Owner */}
+            <Route path="/owner/*" element={
+              <ProtectedRoute allowedUserTypes={['owner']}>
+                <Layout>
+                  <Routes>
+                    <Route path="dashboard" element={<OwnerDashboard />} />
+                    <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
+                    <Route path="properties/:id" element={<OwnerPropertyDetail />} />
+                    <Route path="tenants" element={<OwnerTenants />} />
+                    <Route path="tenants/:id" element={<OwnerTenantDetail />} />
+                    <Route path="documents" element={<OwnerDocuments />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
             
-            {/* Agent Routes */}
-            <Route 
-              path="/agent/dashboard" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/agent/alerts" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentAlerts />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/agent/applications" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentApplications />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/agent/properties" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentProperties />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/agent/payments" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentPayments />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/agent/stats" 
-              element={
-                <ProtectedRoute userTypes={['agent']}>
-                  <AgentStats />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Routes Tenant */}
+            <Route path="/tenant/*" element={
+              <ProtectedRoute allowedUserTypes={['tenant']}>
+                <Layout>
+                  <Routes>
+                    <Route path="dashboard" element={<TenantDashboard />} />
+                    <Route path="application" element={<TenantApplication />} />
+                    <Route path="applications" element={<TenantApplications />} />
+                    <Route path="account" element={<TenantAccount />} />
+                    <Route path="alerts" element={<TenantAlerts />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Page 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        </div>
+        <Toaster />
+      </Router>
+    </AuthProvider>
+  );
+}
 
 export default App;
