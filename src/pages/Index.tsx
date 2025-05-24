@@ -1,358 +1,257 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/contexts/AuthContext';
-import Logo from '@/components/layout/Logo';
-import { Separator } from "@/components/ui/separator";
 
-const Index = () => {
-  const { signIn, signInWithGoogle, signUp, user, profile, createTestUsers, loading } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCreatingTestUsers, setIsCreatingTestUsers] = useState(false);
-  
-  // États pour le formulaire de connexion
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  
-  // États pour le formulaire d'inscription
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [userType, setUserType] = useState<'tenant' | 'owner' | 'agent'>('tenant');
-  
-  // Effet pour rediriger si l'utilisateur est déjà connecté
-  useEffect(() => {
-    // Ne rediriger que si le chargement est terminé et que l'utilisateur est connecté avec un profil
-    if (!loading && user && profile) {
-      switch(profile.type) {
-        case 'tenant':
-          navigate('/tenant/dashboard');
-          break;
-        case 'owner':
-          navigate('/owner/dashboard');
-          break;
-        case 'agent':
-          navigate('/agent/dashboard');
-          break;
-      }
-    }
-  }, [user, profile, loading, navigate]);
-  
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      await signIn(loginEmail, loginPassword);
-      // La redirection se fera automatiquement via useEffect ou via le context Auth
-    } catch (error) {
-      // Gestion des erreurs déjà dans le contexte Auth
-    } finally {
-      setIsLoading(false);
-    }
-  };
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Building, Search, Users, Shield, Zap, CheckCircle } from 'lucide-react';
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      // Gestion des erreurs déjà dans le contexte Auth
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    if (signupPassword !== signupConfirmPassword) {
-      toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
-    
-    try {
-      await signUp(
-        signupEmail,
-        signupPassword,
-        userType,
-        firstName,
-        lastName,
-        phone
-      );
-      // Ici, après l'inscription réussie, l'utilisateur devra vérifier son e-mail
-      toast({
-        title: "Inscription réussie",
-        description: "Veuillez vérifier votre e-mail pour confirmer votre compte",
-      });
-    } catch (error) {
-      // Gestion des erreurs déjà dans le contexte Auth
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleCreateTestUsers = async () => {
-    setIsCreatingTestUsers(true);
-    try {
-      await createTestUsers();
-    } finally {
-      setIsCreatingTestUsers(false);
-    }
-  };
-  
-  // Show loading state if auth is being checked
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <p className="text-lg">Chargement en cours...</p>
-        </div>
-      </div>
-    );
-  }
-  
+const Index: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-4 space-y-6">
-        <div className="flex flex-col items-center space-y-2">
-          <Logo className="h-16 w-16" />
-          <h1 className="text-3xl font-bold text-center">e-mmoLink</h1>
-          <p className="text-center text-gray-500">
-            La plateforme qui connecte propriétaires, locataires et agents immobiliers
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <Building className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">ImmoConnect</span>
+            </div>
+            <nav className="flex space-x-6">
+              <Link to="/properties" className="text-blue-600 hover:text-blue-700 font-medium">
+                Voir les annonces
+              </Link>
+              <Link to="/" className="text-gray-600 hover:text-gray-900">
+                Espace Pro
+              </Link>
+            </nav>
+          </div>
         </div>
-        
-        <Card className="w-full">
-          <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Inscription</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
+      </header>
+
+      {/* Hero Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            Trouvez votre logement idéal
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Découvrez nos annonces immobilières et candidatez en ligne sans inscription. 
+            Une plateforme moderne pour locataires, propriétaires et agents immobiliers.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="px-8">
+              <Link to="/properties">
+                <Search className="mr-2 h-5 w-5" />
+                Parcourir les annonces
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="px-8">
+              <Link to="/">
+                <Users className="mr-2 h-5 w-5" />
+                Espace Professionnel
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Pourquoi choisir ImmoConnect ?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Une solution complète qui simplifie la recherche de logement et la gestion immobilière
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <Card className="text-center">
               <CardHeader>
-                <CardTitle>Connexion</CardTitle>
-                <CardDescription>
-                  Entrez vos identifiants pour accéder à votre compte
-                </CardDescription>
+                <div className="flex justify-center mb-4">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Search className="h-8 w-8 text-blue-600" />
+                  </div>
+                </div>
+                <CardTitle>Recherche simplifiée</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Bouton de connexion Google uniquement */}
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full bg-white border-gray-300 text-black hover:bg-gray-50" 
-                    onClick={handleGoogleLogin}
-                    disabled={isLoading}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Continuer avec Google
-                  </Button>
-                </div>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Ou continuer avec
-                    </span>
-                  </div>
-                </div>
-                
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input 
-                      id="login-email" 
-                      type="email" 
-                      placeholder="email@exemple.com" 
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Mot de passe</Label>
-                    <Input 
-                      id="login-password" 
-                      type="password" 
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Connexion en cours..." : "Se connecter"}
-                  </Button>
-                </form>
+              <CardContent>
+                <p className="text-gray-600">
+                  Trouvez rapidement le bien qui vous correspond grâce à nos filtres avancés 
+                  et notre interface intuitive.
+                </p>
               </CardContent>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup}>
-                <CardHeader>
-                  <CardTitle>Créer un compte</CardTitle>
-                  <CardDescription>
-                    Complétez le formulaire pour vous inscrire
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Bouton de connexion Google uniquement pour l'inscription */}
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-white border-gray-300 text-black hover:bg-gray-50" 
-                      onClick={handleGoogleLogin}
-                      disabled={isLoading}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      S'inscrire avec Google
-                    </Button>
+            </Card>
+
+            {/* Feature 2 */}
+            <Card className="text-center">
+              <CardHeader>
+                <div className="flex justify-center mb-4">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <Zap className="h-8 w-8 text-green-600" />
                   </div>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator className="w-full" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Ou continuer avec
-                      </span>
-                    </div>
+                </div>
+                <CardTitle>Candidature express</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Candidatez en quelques clics sans inscription. 
+                  Votre dossier est transmis directement aux agents.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Feature 3 */}
+            <Card className="text-center">
+              <CardHeader>
+                <div className="flex justify-center mb-4">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <Shield className="h-8 w-8 text-purple-600" />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">Prénom</Label>
-                      <Input 
-                        id="firstName" 
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Nom</Label>
-                      <Input 
-                        id="lastName" 
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input 
-                      id="signup-email" 
-                      type="email" 
-                      placeholder="email@exemple.com" 
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input 
-                      id="phone" 
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Type de compte</Label>
-                    <Tabs 
-                      value={userType} 
-                      onValueChange={(v) => setUserType(v as 'tenant' | 'owner' | 'agent')}
-                      className="w-full"
-                    >
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="tenant">Locataire</TabsTrigger>
-                        <TabsTrigger value="owner">Propriétaire</TabsTrigger>
-                        <TabsTrigger value="agent">Agent</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Mot de passe</Label>
-                    <Input 
-                      id="signup-password" 
-                      type="password" 
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                    <Input 
-                      id="confirm-password" 
-                      type="password" 
-                      value={signupConfirmPassword}
-                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Inscription en cours..." : "S'inscrire"}
-                  </Button>
-                </CardFooter>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
-        
-        {/* Button for creating test users */}
-        <div className="flex justify-center mt-4">
-          <Button 
-            variant="outline"
-            onClick={handleCreateTestUsers}
-            disabled={isCreatingTestUsers}
-            className="text-xs"
-          >
-            {isCreatingTestUsers 
-              ? "Création des comptes en cours..." 
-              : "Créer comptes de test (agent, proprio, locataire)"}
+                </div>
+                <CardTitle>Sécurisé & fiable</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Vos données sont protégées et seuls les agents immobiliers 
+                  qualifiés peuvent consulter vos candidatures.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Process Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Comment ça marche ?
+            </h2>
+            <p className="text-lg text-gray-600">
+              Un processus simple en 3 étapes pour trouver votre logement
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
+                  1
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Explorez les annonces</h3>
+              <p className="text-gray-600">
+                Parcourez notre catalogue d'annonces immobilières avec des filtres personnalisés 
+                pour trouver le bien qui vous correspond.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
+                  2
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Candidatez en ligne</h3>
+              <p className="text-gray-600">
+                Remplissez notre formulaire de candidature simple et complet. 
+                Aucune inscription n'est nécessaire.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
+                  3
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Soyez contacté</h3>
+              <p className="text-gray-600">
+                L'agent immobilier examine votre dossier et vous contacte rapidement 
+                pour organiser une visite si votre profil correspond.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-blue-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Prêt à trouver votre prochain logement ?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Découvrez dès maintenant nos annonces immobilières disponibles 
+            et candidatez en quelques minutes.
+          </p>
+          <Button asChild size="lg" variant="secondary" className="px-8">
+            <Link to="/properties">
+              Voir toutes les annonces
+            </Link>
           </Button>
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Building className="h-6 w-6" />
+                <span className="text-lg font-bold">ImmoConnect</span>
+              </div>
+              <p className="text-gray-400">
+                La plateforme moderne pour simplifier la recherche de logement 
+                et la gestion immobilière.
+              </p>
+            </div>
+
+            {/* Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Locataires</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/properties" className="hover:text-white">Toutes les annonces</Link></li>
+                <li><a href="#" className="hover:text-white">Conseils location</a></li>
+                <li><a href="#" className="hover:text-white">Aide candidature</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Professionnels</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/" className="hover:text-white">Espace Pro</Link></li>
+                <li><a href="#" className="hover:text-white">Gestion des biens</a></li>
+                <li><a href="#" className="hover:text-white">Outils agent</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">Centre d'aide</a></li>
+                <li><a href="#" className="hover:text-white">Contact</a></li>
+                <li><a href="#" className="hover:text-white">Conditions d'utilisation</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 ImmoConnect. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

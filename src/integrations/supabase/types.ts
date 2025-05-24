@@ -143,6 +143,7 @@ export type Database = {
           description: string | null
           id: string
           is_available: boolean
+          is_public: boolean
           owner_id: string
           postal_code: string
           price: number
@@ -159,6 +160,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_available?: boolean
+          is_public?: boolean
           owner_id: string
           postal_code: string
           price: number
@@ -175,6 +177,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_available?: boolean
+          is_public?: boolean
           owner_id?: string
           postal_code?: string
           price?: number
@@ -283,9 +286,36 @@ export type Database = {
           },
         ]
       }
+      public_application_limits: {
+        Row: {
+          application_count: number
+          created_at: string
+          id: string
+          ip_address: unknown
+          last_application_at: string
+        }
+        Insert: {
+          application_count?: number
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          last_application_at?: string
+        }
+        Update: {
+          application_count?: number
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          last_application_at?: string
+        }
+        Relationships: []
+      }
       tenant_applications: {
         Row: {
           birthdate: string | null
+          candidate_email: string | null
+          candidate_name: string | null
+          candidate_phone: string | null
           city: string | null
           company: string | null
           contract_end: string | null
@@ -311,11 +341,14 @@ export type Database = {
           postal_code: string | null
           score: number | null
           status: string | null
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
           birthdate?: string | null
+          candidate_email?: string | null
+          candidate_name?: string | null
+          candidate_phone?: string | null
           city?: string | null
           company?: string | null
           contract_end?: string | null
@@ -341,11 +374,14 @@ export type Database = {
           postal_code?: string | null
           score?: number | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
           birthdate?: string | null
+          candidate_email?: string | null
+          candidate_name?: string | null
+          candidate_phone?: string | null
           city?: string | null
           company?: string | null
           contract_end?: string | null
@@ -371,7 +407,7 @@ export type Database = {
           postal_code?: string | null
           score?: number | null
           status?: string | null
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string
         }
         Relationships: [
