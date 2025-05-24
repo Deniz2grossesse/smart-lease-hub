@@ -47,7 +47,7 @@ function App() {
             
             {/* Routes Agent */}
             <Route path="/agent/*" element={
-              <ProtectedRoute allowedUserTypes={['agent']}>
+              <ProtectedRoute userTypes={['agent']}>
                 <Layout>
                   <Routes>
                     <Route path="dashboard" element={<AgentDashboard />} />
@@ -65,7 +65,7 @@ function App() {
             
             {/* Routes Owner */}
             <Route path="/owner/*" element={
-              <ProtectedRoute allowedUserTypes={['owner']}>
+              <ProtectedRoute userTypes={['owner']}>
                 <Layout>
                   <Routes>
                     <Route path="dashboard" element={<OwnerDashboard />} />
@@ -81,7 +81,7 @@ function App() {
             
             {/* Routes Tenant */}
             <Route path="/tenant/*" element={
-              <ProtectedRoute allowedUserTypes={['tenant']}>
+              <ProtectedRoute userTypes={['tenant']}>
                 <Layout>
                   <Routes>
                     <Route path="dashboard" element={<TenantDashboard />} />
