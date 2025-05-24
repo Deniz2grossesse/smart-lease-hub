@@ -38,8 +38,8 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Page d'accueil publique */}
@@ -99,8 +99,8 @@ function App() {
           </Routes>
         </div>
         <Toaster />
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
