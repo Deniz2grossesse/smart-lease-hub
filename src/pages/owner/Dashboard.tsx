@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +27,7 @@ const OwnerDashboard = () => {
     address: "",
     city: "",
     postal_code: "",
-    property_type: "apartment", // Fix: use valid property type instead of empty string
+    property_type: "apartment",
     rooms: 1,
     area: 0,
     price: 0,
@@ -104,7 +103,7 @@ const OwnerDashboard = () => {
         address: "",
         city: "",
         postal_code: "",
-        property_type: "apartment", // Fix: use valid property type instead of empty string
+        property_type: "apartment",
         rooms: 1,
         area: 0,
         price: 0,
@@ -131,7 +130,7 @@ const OwnerDashboard = () => {
 
   // Gérer la navigation vers la page de détail du bien
   const handleViewProperty = (propertyId: string) => {
-    navigate(`/owner/property/${propertyId}`);
+    navigate(`/owner/properties/${propertyId}`);
   };
   
   // Gérer la navigation vers la page de détail du locataire
