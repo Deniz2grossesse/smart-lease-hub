@@ -10,6 +10,8 @@ import PropertyPagination from "@/components/ui/property-pagination";
 import PropertyList from "@/components/property/PropertyList";
 import { usePagination } from "@/hooks/usePagination";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import ErrorFallback from "@/components/ui/error-fallback";
+import NoDataFallback from "@/components/ui/no-data-fallback";
 
 const AgentProperties = () => {
   const { user } = useAuth();
@@ -17,15 +19,16 @@ const AgentProperties = () => {
   if (!user) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Accès non autorisé</h2>
-          <p>Veuillez vous connecter pour accéder à cette page.</p>
-        </div>
+        <ErrorFallback 
+          title="Accès non autorisé"
+          message="Veuillez vous connecter pour accéder à cette page."
+          showRetry={false}
+        />
       </div>
     );
   }
 
-  const { data: properties = [], isLoading, error } = useQuery({
+  const { data: properties = [], isLoading, error, refetch } = useQuery({
     queryKey: ['agent-properties'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -44,8 +47,9 @@ const AgentProperties = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
+        console.error('Erreur lors du chargement des propriétés:', error);
         toast({
-          title: "Erreur",
+          title: "Erreur de chargement",
           description: "Impossible de charger les propriétés",
           variant: "destructive"
         });
@@ -54,7 +58,10 @@ const AgentProperties = () => {
       
       return data || [];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: (failureCount, error) => {
+      return failureCount < 2;
+    }
   });
 
   const {
@@ -72,13 +79,14 @@ const AgentProperties = () => {
   if (error) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Erreur</h2>
-          <p>Une erreur est survenue lors du chargement des propriétés.</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Réessayer
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Gestion des biens</h1>
         </div>
+        <ErrorFallback 
+          title="Erreur de chargement"
+          message="Une erreur est survenue lors du chargement des propriétés. Veuillez réessayer."
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
@@ -88,8 +96,8 @@ const AgentProperties = () => {
       <div className="flex justify-between items-center mb-6 animate-fade-in">
         <h1 className="text-3xl font-bold">Gestion des biens</h1>
         <Button asChild className="hover-scale">
-          <Link to="/agent/properties/new">
-            <Plus className="mr-2 h-4 w-4" />
+          <Link to="/agent/properties/new" aria-label="Ajouter une nouvelle propriété">
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
             Nouvelle propriété
           </Link>
         </Button>
@@ -100,6 +108,14 @@ const AgentProperties = () => {
           <LoadingSpinner size="lg" />
           <span className="ml-3 text-lg">Chargement des propriétés...</span>
         </div>
+      ) : properties.length === 0 ? (
+        <NoDataFallback
+          title="Aucune propriété disponible"
+          message="Il n'y a pas encore de propriétés dans le système. Commencez par en ajouter une !"
+          actionLabel="Ajouter une propriété"
+          onAction={() => window.location.href = '/agent/properties/new'}
+          icon="plus"
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

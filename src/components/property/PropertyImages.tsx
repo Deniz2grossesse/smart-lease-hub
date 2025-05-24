@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, Trash } from "lucide-react";
+import { Upload, Trash, RefreshCw, ImageOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,11 @@ interface PropertyImagesProps {
 const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: PropertyImagesProps) => {
   const { user } = useAuth();
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (imageId: string) => {
+    setFailedImages(prev => new Set(prev).add(imageId));
+  };
 
   const deleteImage = async (imageId: string, imageUrl: string) => {
     try {
@@ -76,14 +81,14 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
       onImageDeleted(imageId);
       
       toast({
-        title: "Image supprimée",
-        description: "L'image a été supprimée de votre propriété avec succès",
+        title: "Image supprimée avec succès",
+        description: "L'image a été retirée de votre propriété",
       });
 
     } catch (error: any) {
       console.error('Erreur lors de la suppression de l\'image:', error);
       toast({
-        title: "Erreur de suppression",
+        title: "Erreur lors de la suppression",
         description: error.message || "Impossible de supprimer cette image. Veuillez réessayer.",
         variant: "destructive"
       });
@@ -94,12 +99,17 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
 
   if (!images || images.length === 0) {
     return (
-      <div>
+      <div role="region" aria-label="Section photos de la propriété">
         <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos</h3>
-        <div className="p-8 border rounded-md flex flex-col items-center justify-center text-center">
+        <div className="p-8 border rounded-md flex flex-col items-center justify-center text-center bg-gray-50">
+          <ImageOff className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
           <p className="text-muted-foreground mb-4">Aucune image disponible pour cette propriété</p>
-          <Button variant="outline" onClick={onEditClick}>
-            <Upload className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            onClick={onEditClick}
+            aria-label="Ajouter des photos à cette propriété"
+          >
+            <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
             Ajouter des photos
           </Button>
         </div>
@@ -108,21 +118,27 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos ({images.length})</h3>
+    <div role="region" aria-label="Section photos de la propriété">
+      <h3 className="text-sm font-medium text-muted-foreground mb-2">
+        Photos ({images.length})
+      </h3>
       <div className="grid grid-cols-2 gap-2">
         {images.map((image, index) => (
           <div key={image.id} className="aspect-square relative overflow-hidden rounded-md group">
-            <img 
-              src={image.url} 
-              alt={`Photo ${index + 1} de la propriété`}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder.svg';
-                target.alt = 'Image non disponible';
-              }}
-            />
+            {failedImages.has(image.id) ? (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                <ImageOff className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                <span className="sr-only">Image non disponible</span>
+              </div>
+            ) : (
+              <img 
+                src={image.url} 
+                alt={`Photo ${index + 1} de la propriété${image.is_primary ? ' (image principale)' : ''}`}
+                className="w-full h-full object-cover transition-transform hover:scale-105"
+                onError={() => handleImageError(image.id)}
+                loading="lazy"
+              />
+            )}
             {image.is_primary && (
               <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
                 Principal
@@ -136,8 +152,9 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
                     size="sm"
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                     disabled={deletingImageId === image.id}
+                    aria-label={`Supprimer la photo ${index + 1}`}
                   >
-                    <Trash className="h-4 w-4" />
+                    <Trash className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -156,7 +173,7 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
                       onClick={() => deleteImage(image.id, image.url)}
                       disabled={deletingImageId === image.id}
                     >
-                      {deletingImageId === image.id ? "Suppression..." : "Supprimer définitivement"}
+                      {deletingImageId === image.id ? "Suppression en cours..." : "Supprimer définitivement"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -165,8 +182,13 @@ const PropertyImages = ({ images, propertyId, onImageDeleted, onEditClick }: Pro
           </div>
         ))}
       </div>
-      <Button variant="outline" className="mt-2 w-full" onClick={onEditClick}>
-        <Upload className="h-4 w-4 mr-2" />
+      <Button 
+        variant="outline" 
+        className="mt-2 w-full" 
+        onClick={onEditClick}
+        aria-label="Ajouter plus de photos à cette propriété"
+      >
+        <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
         Ajouter plus de photos
       </Button>
     </div>

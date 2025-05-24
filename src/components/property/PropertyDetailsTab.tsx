@@ -14,6 +14,16 @@ const PropertyDetailsTab = ({ property, editing, onEditClick, onImageDeleted }: 
     return null; // Edit form will be handled separately
   }
 
+  const getPropertyTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      apartment: "Appartement",
+      house: "Maison", 
+      studio: "Studio",
+      loft: "Loft"
+    };
+    return types[type] || type;
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -21,11 +31,7 @@ const PropertyDetailsTab = ({ property, editing, onEditClick, onImageDeleted }: 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Type de bien</h3>
-              <p className="mt-1">{property.property_type === "apartment" ? "Appartement" : 
-                                 property.property_type === "house" ? "Maison" : 
-                                 property.property_type === "studio" ? "Studio" : 
-                                 property.property_type === "loft" ? "Loft" : 
-                                 property.property_type}</p>
+              <p className="mt-1">{getPropertyTypeLabel(property.property_type)}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Disponibilité</h3>
@@ -41,8 +47,10 @@ const PropertyDetailsTab = ({ property, editing, onEditClick, onImageDeleted }: 
           
           <div className="mt-4">
             <h3 className="text-sm font-medium text-muted-foreground">Adresse</h3>
-            <p className="mt-1">{property.address}</p>
-            <p>{property.city} {property.postal_code}</p>
+            <address className="mt-1 not-italic">
+              {property.address}<br />
+              {property.city} {property.postal_code}
+            </address>
           </div>
           
           <div className="grid grid-cols-3 gap-4 mt-4">
@@ -65,7 +73,18 @@ const PropertyDetailsTab = ({ property, editing, onEditClick, onImageDeleted }: 
             {property.description && property.description.trim() ? (
               <p className="mt-1 whitespace-pre-wrap">{property.description}</p>
             ) : (
-              <p className="mt-1 text-muted-foreground italic">Pas de description disponible</p>
+              <div className="mt-1 p-4 bg-gray-50 rounded border-2 border-dashed border-gray-200 text-center">
+                <p className="text-muted-foreground italic">Aucune description disponible</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onEditClick}
+                  className="mt-2"
+                  aria-label="Ajouter une description à cette propriété"
+                >
+                  Ajouter une description
+                </Button>
+              </div>
             )}
           </div>
         </div>
