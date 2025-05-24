@@ -11,10 +11,15 @@ import NotFound from "./pages/NotFound";
 
 // Tenant Routes
 import TenantDashboard from "./pages/tenant/Dashboard";
+import TenantAccount from "./pages/tenant/Account";
 import TenantApplication from "./pages/tenant/Application";
+import TenantAlerts from "./pages/tenant/Alerts";
+import TenantApplications from "./pages/tenant/Applications";
 
 // Owner Routes
 import OwnerDashboard from "./pages/owner/Dashboard";
+import OwnerTenants from "./pages/owner/Tenants";
+import OwnerDocuments from "./pages/owner/Documents";
 import PropertyDetail from "./pages/owner/PropertyDetail";
 import TenantDetail from "./pages/owner/TenantDetail";
 
@@ -51,7 +56,7 @@ const App = () => (
               path="/tenant/account" 
               element={
                 <ProtectedRoute userTypes={['tenant']}>
-                  <TenantDashboard />
+                  <TenantAccount />
                 </ProtectedRoute>
               } 
             />
@@ -67,7 +72,7 @@ const App = () => (
               path="/tenant/alerts" 
               element={
                 <ProtectedRoute userTypes={['tenant']}>
-                  <TenantDashboard />
+                  <TenantAlerts />
                 </ProtectedRoute>
               } 
             />
@@ -75,7 +80,7 @@ const App = () => (
               path="/tenant/applications" 
               element={
                 <ProtectedRoute userTypes={['tenant']}>
-                  <TenantDashboard />
+                  <TenantApplications />
                 </ProtectedRoute>
               } 
             />
@@ -86,6 +91,30 @@ const App = () => (
               element={
                 <ProtectedRoute userTypes={['owner']}>
                   <OwnerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/owner/properties" 
+              element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <OwnerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/owner/tenants" 
+              element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <OwnerTenants />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/owner/documents" 
+              element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <OwnerDocuments />
                 </ProtectedRoute>
               } 
             />
@@ -102,30 +131,6 @@ const App = () => (
               element={
                 <ProtectedRoute userTypes={['owner']}>
                   <TenantDetail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/properties" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/tenants" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/owner/documents" 
-              element={
-                <ProtectedRoute userTypes={['owner']}>
-                  <OwnerDashboard />
                 </ProtectedRoute>
               } 
             />
