@@ -24,7 +24,9 @@ const Index: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await fetchPublicProperties(filters);
-      setProperties(data);
+      // Limiter à 8 annonces pour la homepage
+      const limitedData = data.slice(0, 8);
+      setProperties(limitedData);
       setResultsCount(data.length);
     } catch (error) {
       console.error('Erreur chargement propriétés:', error);
@@ -52,8 +54,11 @@ const Index: React.FC = () => {
               <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
             </div>
             <nav className="flex space-x-6">
-              <Link to="/" className="text-gray-600 hover:text-gray-900">
-                Espace Pro
+              <Link to="/properties" className="text-gray-600 hover:text-gray-900">
+                Annonces
+              </Link>
+              <Link to="/auth" className="text-blue-600 hover:text-blue-800 font-medium">
+                Se connecter
               </Link>
             </nav>
           </div>
@@ -68,7 +73,7 @@ const Index: React.FC = () => {
               Trouvez votre logement idéal
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Découvrez nos annonces immobilières et candidatez en ligne sans inscription
+              Découvrez nos annonces immobilières et candidatez en ligne
             </p>
           </div>
           
@@ -103,17 +108,27 @@ const Index: React.FC = () => {
                 )}
               </div>
 
-              {/* Accès rapide Espace Pro */}
+              {/* Voir toutes les annonces */}
               <Button asChild variant="outline" size="sm">
-                <Link to="/">
-                  <Users className="mr-2 h-4 w-4" />
-                  Espace Pro
+                <Link to="/properties">
+                  Voir toutes les annonces
                 </Link>
               </Button>
             </div>
 
             {/* Grille des propriétés */}
             <PropertyGrid properties={properties} isLoading={isLoading} />
+
+            {/* Voir plus d'annonces */}
+            {!isLoading && properties.length > 0 && (
+              <div className="text-center mt-8">
+                <Button asChild size="lg" className="px-8">
+                  <Link to="/properties">
+                    Voir toutes les annonces ({resultsCount})
+                  </Link>
+                </Button>
+              </div>
+            )}
 
             {/* Call to action si pas de résultats */}
             {!isLoading && properties.length === 0 && (
@@ -150,7 +165,8 @@ const Index: React.FC = () => {
               La plateforme moderne pour simplifier la recherche de logement
             </p>
             <div className="flex justify-center space-x-6 text-sm">
-              <Link to="/" className="hover:text-white">Espace Pro</Link>
+              <Link to="/auth" className="hover:text-white">Se connecter</Link>
+              <Link to="/properties" className="hover:text-white">Annonces</Link>
               <a href="#" className="hover:text-white">Contact</a>
               <a href="#" className="hover:text-white">Aide</a>
             </div>
