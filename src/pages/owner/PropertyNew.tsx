@@ -20,7 +20,7 @@ const OwnerPropertyNew = () => {
     address: '',
     city: '',
     postal_code: '',
-    property_type: '',
+    property_type: 'apartment', // Fix: use valid property type instead of empty string
     rooms: 1,
     area: 0,
     price: 0,

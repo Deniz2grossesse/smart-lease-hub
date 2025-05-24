@@ -4,7 +4,7 @@ import { Property, PropertyFormData } from '@/lib/types/property';
 import { validatePropertyForm, sanitizeInput } from '@/lib/utils/validation';
 
 // Export PropertyFormData from types
-export { PropertyFormData } from '@/lib/types/property';
+export type { PropertyFormData } from '@/lib/types/property';
 
 export const createProperty = async (propertyData: PropertyFormData): Promise<Property> => {
   try {
