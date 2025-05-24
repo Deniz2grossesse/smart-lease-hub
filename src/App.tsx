@@ -8,7 +8,6 @@ import ErrorBoundary from '@/components/ui/error-boundary';
 
 // Pages publiques
 import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
 import NotFound from '@/pages/NotFound';
 import PublicProperties from '@/pages/PublicProperties';
 import PublicPropertyDetail from '@/pages/PublicPropertyDetail';
@@ -52,7 +51,6 @@ function App() {
             <Routes>
               {/* Pages publiques */}
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
               <Route path="/properties" element={<PublicProperties />} />
               <Route path="/properties/:id" element={<PublicPropertyDetail />} />
               

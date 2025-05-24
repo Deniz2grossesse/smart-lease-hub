@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, Search, Filter, ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Logo from '@/components/layout/Logo';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { fetchPublicProperties, PublicPropertyFilters } from '@/lib/services/publicPropertyService';
 import { Property } from '@/lib/types/property';
@@ -89,15 +89,15 @@ const PublicProperties: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <Logo className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
+              <Building className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">ImmoConnect</span>
             </Link>
             <nav className="flex space-x-4">
               <Link to="/properties" className="text-blue-600 font-medium">
                 Annonces
               </Link>
-              <Link to="/auth" className="text-gray-600 hover:text-gray-900">
-                Se connecter
+              <Link to="/" className="text-gray-600 hover:text-gray-900">
+                Espace Pro
               </Link>
             </nav>
           </div>

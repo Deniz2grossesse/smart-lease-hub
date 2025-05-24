@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Building, MapPin, ArrowLeft, User, Mail, Phone } from 'lucide-react';
-import Logo from '@/components/layout/Logo';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import ErrorMessage from '@/components/ui/error-messages';
 import PublicApplicationForm from '@/components/property/PublicApplicationForm';
@@ -76,15 +75,15 @@ const PublicPropertyDetail: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <Link to="/" className="flex items-center space-x-2">
-                <Logo className="h-8 w-8" />
-                <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
+                <Building className="h-8 w-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">ImmoConnect</span>
               </Link>
               <nav className="flex space-x-4">
                 <Link to="/properties" className="text-blue-600 font-medium">
                   Annonces
                 </Link>
-                <Link to="/auth" className="text-gray-600 hover:text-gray-900">
-                  Se connecter
+                <Link to="/" className="text-gray-600 hover:text-gray-900">
+                  Espace Pro
                 </Link>
               </nav>
             </div>
@@ -118,15 +117,15 @@ const PublicPropertyDetail: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <Logo className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
+              <Building className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">ImmoConnect</span>
             </Link>
             <nav className="flex space-x-4">
               <Link to="/properties" className="text-blue-600 font-medium">
                 Annonces
               </Link>
-              <Link to="/auth" className="text-gray-600 hover:text-gray-900">
-                Se connecter
+              <Link to="/" className="text-gray-600 hover:text-gray-900">
+                Espace Pro
               </Link>
             </nav>
           </div>
