@@ -1,367 +1,325 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { updateProperty, deleteProperty } from '@/lib/services/propertyService';
+import { validatePropertyOwnership } from '@/lib/services/ownershipValidation';
+import PropertyEditForm from '@/components/property/PropertyEditForm';
+import PropertyImages from '@/components/property/PropertyImages';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import ErrorMessage from '@/components/ui/error-messages';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-const PropertyEdit = () => {
-  const navigate = useNavigate();
+const OwnerPropertyEdit = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [formData, setFormData] = useState({
-    title: '',
-    address: '',
-    city: '',
-    postal_code: '',
-    property_type: '',
-    rooms: 1,
-    area: 0,
-    price: 0,
-    description: '',
-    is_available: true
-  });
+  const [property, setProperty] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [newImages, setNewImages] = useState<File[]>([]);
 
   useEffect(() => {
-    if (!user) {
-      toast({
-        title: "Accès refusé",
-        description: "Vous devez être connecté pour modifier une propriété",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
+    if (id && user) {
+      fetchProperty();
+    } else if (!user) {
+      setError("Authentification requise");
+      setIsLoading(false);
     }
+  }, [id, user]);
 
-    if (id) {
-      fetchProperty(id);
-    }
-  }, [id, user, navigate]);
-
-  const fetchProperty = async (propertyId: string) => {
+  const fetchProperty = async () => {
+    if (!id || !user) return;
+    
     try {
+      setIsLoading(true);
+      setError(null);
+
+      // Vérification de la propriété du bien
+      const { isOwner } = await validatePropertyOwnership(id, user.id);
+      
+      if (!isOwner) {
+        setError("Vous n'êtes pas autorisé à modifier cette propriété");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
-        .eq('id', propertyId)
+        .select(`
+          *,
+          property_images (*)
+        `)
+        .eq('id', id)
         .single();
 
       if (error) {
+        console.error('Erreur chargement propriété:', error);
         if (error.code === 'PGRST116') {
-          toast({
-            title: "Propriété introuvable",
-            description: "Cette propriété n'existe pas ou a été supprimée",
-            variant: "destructive"
-          });
+          setError("Cette propriété n'existe pas");
         } else {
-          toast({
-            title: "Erreur de chargement",
-            description: "Impossible de charger les données de la propriété",
-            variant: "destructive"
-          });
+          setError("Erreur lors du chargement de la propriété");
         }
-        navigate('/owner/dashboard');
         return;
       }
 
-      // Vérification critique de sécurité
-      if (data.owner_id !== user?.id) {
-        toast({
-          title: "Accès non autorisé",
-          description: "Vous n'avez pas le droit de modifier cette propriété",
-          variant: "destructive"
-        });
-        navigate('/owner/dashboard');
-        return;
-      }
+      setProperty(data);
+      setFormData({
+        title: data.title,
+        address: data.address,
+        city: data.city,
+        postal_code: data.postal_code,
+        property_type: data.property_type,
+        rooms: data.rooms,
+        area: data.area,
+        price: data.price,
+        description: data.description || '',
+        is_available: data.is_available
+      });
 
-      if (data) {
-        setFormData({
-          title: data.title,
-          address: data.address,
-          city: data.city,
-          postal_code: data.postal_code,
-          property_type: data.property_type,
-          rooms: data.rooms,
-          area: data.area,
-          price: data.price,
-          description: data.description || '',
-          is_available: data.is_available
-        });
-      }
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-      toast({
-        title: "Erreur système",
-        description: "Une erreur technique s'est produite lors du chargement",
-        variant: "destructive"
-      });
-      navigate('/owner/dashboard');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user || !id) {
-      toast({
-        title: "Erreur d'authentification",
-        description: "Session expirée, veuillez vous reconnecter",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from('properties')
-        .update(formData)
-        .eq('id', id)
-        .eq('owner_id', user.id); // Double vérification côté serveur
-
-      if (error) {
-        console.error('Erreur Supabase:', error);
-        toast({
-          title: "Erreur de sauvegarde",
-          description: "Impossible de sauvegarder les modifications. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Propriété mise à jour",
-        description: `Les modifications de "${formData.title}" ont été enregistrées avec succès`
-      });
-      navigate('/owner/dashboard');
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-      toast({
-        title: "Erreur système",
-        description: "Une erreur technique s'est produite lors de la sauvegarde",
-        variant: "destructive"
-      });
+      console.error('Erreur:', error);
+      setError("Une erreur inattendue s'est produite");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoadingData) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: name === 'rooms' || name === 'area' || name === 'price' ? Number(value) : value
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string | boolean) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewImages(files);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!id) return;
+
+    try {
+      setIsSaving(true);
+      
+      const updateData = { ...formData };
+      if (newImages.length > 0) {
+        updateData.images = newImages;
+      }
+
+      await updateProperty(id, updateData);
+      navigate('/owner/properties');
+      
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      setIsDeleting(true);
+      const success = await deleteProperty(id);
+      
+      if (success) {
+        navigate('/owner/properties');
+      }
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleImageDeleted = (imageId: string) => {
+    setProperty((prev: any) => ({
+      ...prev,
+      property_images: prev.property_images.filter((img: any) => img.id !== imageId)
+    }));
+  };
+
+  if (!user) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-8">
+      <div className="container mx-auto py-6">
+        <ErrorMessage
+          type="auth"
+          message="Veuillez vous connecter pour accéder à cette page"
+          showRetry={false}
+        />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex justify-center items-center py-12">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-muted-foreground">Chargement des données de la propriété...</p>
+          <span className="ml-3 text-lg">Chargement de la propriété...</span>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
         <Button
           variant="outline"
-          onClick={() => navigate('/owner/dashboard')}
+          onClick={() => navigate('/owner/properties')}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour au tableau de bord
+          Retour à mes biens
         </Button>
-        <h1 className="text-2xl font-bold">Modifier la Propriété</h1>
-        <p className="text-gray-600">Modifiez les informations de votre propriété</p>
+        <ErrorMessage
+          type={error.includes("autorisé") ? "permission" : error.includes("existe") ? "not-found" : "server"}
+          message={error}
+          onRetry={() => fetchProperty()}
+        />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="container mx-auto py-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/owner/properties')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour à mes biens
+        </Button>
+        <ErrorMessage
+          type="not-found"
+          message="Cette propriété est introuvable"
+          showRetry={false}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/owner/properties')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour à mes biens
+        </Button>
+        
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Modifier {property.title}</h1>
+          <div className="flex space-x-2">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center"
+            >
+              {isSaving ? (
+                <LoadingSpinner size="sm" className="mr-2" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  disabled={isDeleting}
+                  className="flex items-center"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer cette propriété ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. La propriété "{property.title}" sera définitivement supprimée de votre portefeuille, ainsi que toutes ses images et candidatures associées.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? 'Suppression...' : 'Supprimer définitivement'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations de la propriété</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Titre *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations de la propriété</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PropertyEditForm
+              formData={formData}
+              onChange={handleInputChange}
+              onSelectChange={handleSelectChange}
+              onImageChange={handleImageChange}
+              onSave={handleSave}
+              onCancel={() => navigate('/owner/properties')}
+            />
+          </CardContent>
+        </Card>
 
-              <div>
-                <Label htmlFor="property_type">Type de bien *</Label>
-                <Select 
-                  value={formData.property_type} 
-                  onValueChange={(value) => handleInputChange('property_type', value)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apartment">Appartement</SelectItem>
-                    <SelectItem value="house">Maison</SelectItem>
-                    <SelectItem value="studio">Studio</SelectItem>
-                    <SelectItem value="loft">Loft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="address">Adresse *</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Ville *</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="postal_code">Code postal *</Label>
-                <Input
-                  id="postal_code"
-                  value={formData.postal_code}
-                  onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="rooms">Nombre de pièces *</Label>
-                <Input
-                  id="rooms"
-                  type="number"
-                  min="1"
-                  value={formData.rooms}
-                  onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="area">Surface (m²) *</Label>
-                <Input
-                  id="area"
-                  type="number"
-                  min="1"
-                  value={formData.area}
-                  onChange={(e) => handleInputChange('area', parseFloat(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="price">Loyer (€/mois) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows={4}
-                disabled={isLoading}
-                placeholder="Décrivez votre propriété..."
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="is_available">Disponibilité</Label>
-              <Select 
-                value={formData.is_available.toString()} 
-                onValueChange={(value) => handleInputChange('is_available', value === "true")}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Disponible à la location</SelectItem>
-                  <SelectItem value="false">Loué</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/owner/dashboard')}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  'Enregistrer les modifications'
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Images de la propriété</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PropertyImages
+              images={property.property_images || []}
+              propertyId={property.id}
+              onImageDeleted={handleImageDeleted}
+              onEditClick={() => {
+                // Scroll vers le formulaire d'ajout d'images
+                const imageInput = document.querySelector('input[type="file"]') as HTMLElement;
+                imageInput?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default PropertyEdit;
+export default OwnerPropertyEdit;

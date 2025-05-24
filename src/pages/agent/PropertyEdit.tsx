@@ -3,43 +3,68 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
+import { ArrowLeft, Save, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { updateProperty } from '@/lib/services/propertyService';
+import { validateAgentAccess } from '@/lib/services/ownershipValidation';
+import PropertyEditForm from '@/components/property/PropertyEditForm';
+import PropertyImages from '@/components/property/PropertyImages';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import ErrorMessage from '@/components/ui/error-messages';
 
 const AgentPropertyEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [property, setProperty] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [hasAgentAccess, setHasAgentAccess] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      toast({
-        title: "Accès refusé",
-        description: "Vous devez être connecté comme agent pour modifier une propriété",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
+    if (id && user) {
+      checkAccess();
+    } else if (!user) {
+      setError("Authentification requise");
+      setIsLoading(false);
     }
+  }, [id, user]);
 
-    if (id) {
-      fetchProperty(id);
-    }
-  }, [id, user, navigate]);
-
-  const fetchProperty = async (propertyId: string) => {
+  const checkAccess = async () => {
+    if (!user) return;
+    
     try {
-      setIsLoadingData(true);
+      // Vérifier si l'utilisateur est un agent
+      const { hasAccess } = await validateAgentAccess(user.id);
+      
+      if (!hasAccess) {
+        setError("Accès réservé aux agents immobiliers");
+        setIsLoading(false);
+        return;
+      }
+      
+      setHasAgentAccess(true);
+      await fetchProperty();
+      
+    } catch (error) {
+      console.error('Erreur vérification accès:', error);
+      setError("Erreur lors de la vérification des droits d'accès");
+      setIsLoading(false);
+    }
+  };
+
+  const fetchProperty = async () => {
+    if (!id) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -48,139 +73,152 @@ const AgentPropertyEdit = () => {
           profiles!properties_owner_id_fkey (
             first_name,
             last_name,
-            email
+            email,
+            phone
           )
         `)
-        .eq('id', propertyId)
+        .eq('id', id)
         .single();
 
       if (error) {
+        console.error('Erreur chargement propriété:', error);
         if (error.code === 'PGRST116') {
-          toast({
-            title: "Propriété introuvable",
-            description: "Cette propriété n'existe pas ou a été supprimée",
-            variant: "destructive"
-          });
+          setError("Cette propriété n'existe pas");
         } else {
-          toast({
-            title: "Erreur de chargement",
-            description: "Impossible de charger les détails de la propriété",
-            variant: "destructive"
-          });
+          setError("Erreur lors du chargement de la propriété");
         }
-        navigate('/agent/properties');
         return;
       }
 
       setProperty(data);
+      setFormData({
+        title: data.title,
+        address: data.address,
+        city: data.city,
+        postal_code: data.postal_code,
+        property_type: data.property_type,
+        rooms: data.rooms,
+        area: data.area,
+        price: data.price,
+        description: data.description || '',
+        is_available: data.is_available
+      });
+
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-      toast({
-        title: "Erreur système",
-        description: "Une erreur technique s'est produite lors du chargement",
-        variant: "destructive"
-      });
-      navigate('/agent/properties');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!property || !id || !user) {
-      toast({
-        title: "Erreur d'authentification",
-        description: "Session expirée, veuillez vous reconnecter",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from('properties')
-        .update({
-          title: property.title?.trim(),
-          address: property.address?.trim(),
-          city: property.city?.trim(),
-          postal_code: property.postal_code?.trim(),
-          property_type: property.property_type,
-          rooms: property.rooms,
-          area: property.area,
-          price: property.price,
-          description: property.description?.trim(),
-        })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Erreur Supabase:', error);
-        toast({
-          title: "Erreur de modification",
-          description: "Impossible de sauvegarder les modifications. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Bien modifié avec succès",
-        description: `Les modifications de "${property.title}" ont été enregistrées`
-      });
-      
-      navigate('/agent/properties');
-    } catch (error) {
-      console.error('Erreur lors de la modification:', error);
-      toast({
-        title: "Erreur système",
-        description: "Une erreur technique s'est produite lors de la sauvegarde",
-        variant: "destructive"
-      });
+      console.error('Erreur:', error);
+      setError("Une erreur inattendue s'est produite");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setProperty((prev: any) => ({
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({
       ...prev,
-      [field]: value
+      [name]: name === 'rooms' || name === 'area' || name === 'price' ? Number(value) : value
     }));
   };
 
-  if (isLoadingData) {
+  const handleSelectChange = (name: string, value: string | boolean) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewImages(files);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!id) return;
+
+    // Note: Les agents peuvent voir et éditer les propriétés mais pas les supprimer
+    // La fonction updateProperty vérifiera les droits de propriété
+    toast({
+      title: "Fonctionnalité restreinte",
+      description: "En tant qu'agent, vous ne pouvez que consulter les propriétés. Seuls les propriétaires peuvent les modifier.",
+      variant: "destructive"
+    });
+  };
+
+  const handleImageDeleted = (imageId: string) => {
+    toast({
+      title: "Action non autorisée",
+      description: "Seuls les propriétaires peuvent supprimer les images",
+      variant: "destructive"
+    });
+  };
+
+  if (!user) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-8">
+      <div className="container mx-auto py-6">
+        <ErrorMessage
+          type="auth"
+          message="Veuillez vous connecter pour accéder à cette page"
+          showRetry={false}
+        />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex justify-center items-center py-12">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-muted-foreground">Chargement des données de la propriété...</p>
+          <span className="ml-3 text-lg">Vérification des droits d'accès...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/agent/properties')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour aux propriétés
+        </Button>
+        <ErrorMessage
+          type={error.includes("réservé") ? "permission" : error.includes("existe") ? "not-found" : "server"}
+          message={error}
+          onRetry={() => checkAccess()}
+        />
       </div>
     );
   }
 
   if (!property) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-8">
-          <h2 className="text-2xl font-bold mb-4">Propriété non trouvée</h2>
-          <p className="text-muted-foreground mb-6">
-            Cette propriété n'existe pas ou vous n'avez pas les droits pour y accéder.
-          </p>
-          <Button onClick={() => navigate('/agent/properties')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour aux propriétés
-          </Button>
-        </div>
+      <div className="container mx-auto py-6">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/agent/properties')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour aux propriétés
+        </Button>
+        <ErrorMessage
+          type="not-found"
+          message="Cette propriété est introuvable"
+          showRetry={false}
+        />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto py-6">
       <div className="mb-6">
         <Button
           variant="outline"
@@ -188,185 +226,114 @@ const AgentPropertyEdit = () => {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour aux biens
+          Retour aux propriétés
         </Button>
-        <h1 className="text-2xl font-bold">Modifier le bien</h1>
-        {property.profiles && (
-          <p className="text-muted-foreground">
-            Propriétaire: {property.profiles.first_name} {property.profiles.last_name}
-          </p>
-        )}
+        
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">{property.title}</h1>
+            <p className="text-muted-foreground mt-1">
+              Mode consultation - Propriétaire: {property.profiles?.first_name} {property.profiles?.last_name}
+            </p>
+          </div>
+          <div className="flex items-center text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+            <Lock className="h-4 w-4 mr-2" />
+            <span className="text-sm font-medium">Lecture seule</span>
+          </div>
+        </div>
       </div>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Informations du bien</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="title">Titre de l'annonce *</Label>
-              <Input
-                id="title"
-                value={property.title || ''}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                required
-                minLength={5}
-                maxLength={100}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="property_type">Type de bien *</Label>
-                <Select
-                  value={property.property_type || ''}
-                  onValueChange={(value) => handleInputChange('property_type', value)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apartment">Appartement</SelectItem>
-                    <SelectItem value="house">Maison</SelectItem>
-                    <SelectItem value="studio">Studio</SelectItem>
-                    <SelectItem value="loft">Loft</SelectItem>
-                  </SelectContent>
-                </Select>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations de la propriété</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Version en lecture seule pour les agents */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Titre</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.title}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Type de bien</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">
+                    {formData.property_type === 'apartment' ? 'Appartement' :
+                     formData.property_type === 'house' ? 'Maison' :
+                     formData.property_type === 'studio' ? 'Studio' : 'Loft'}
+                  </p>
+                </div>
               </div>
-
+              
               <div>
-                <Label htmlFor="rooms">Nombre de pièces *</Label>
-                <Input
-                  id="rooms"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={property.rooms || 1}
-                  onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
+                <label className="text-sm font-medium text-gray-700">Adresse</label>
+                <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.address}</p>
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="address">Adresse *</Label>
-              <Input
-                id="address"
-                value={property.address || ''}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                required
-                minLength={10}
-                maxLength={200}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Ville *</Label>
-                <Input
-                  id="city"
-                  value={property.city || ''}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  required
-                  minLength={2}
-                  maxLength={50}
-                  disabled={isLoading}
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Ville</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.city}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Code postal</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.postal_code}</p>
+                </div>
               </div>
-
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Pièces</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.rooms}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Surface (m²)</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.area}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Loyer (€)</label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded border">{formData.price}</p>
+                </div>
+              </div>
+              
               <div>
-                <Label htmlFor="postal_code">Code postal *</Label>
-                <Input
-                  id="postal_code"
-                  value={property.postal_code || ''}
-                  onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                  required
-                  pattern="[0-9]{5}"
-                  title="Le code postal doit contenir 5 chiffres"
-                  disabled={isLoading}
-                />
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <p className="mt-1 p-2 bg-gray-50 rounded border min-h-[100px] whitespace-pre-wrap">
+                  {formData.description || 'Aucune description'}
+                </p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Disponibilité</label>
+                <p className="mt-1 p-2 bg-gray-50 rounded border">
+                  {formData.is_available ? 'Disponible' : 'Loué'}
+                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="area">Surface (m²) *</Label>
-                <Input
-                  id="area"
-                  type="number"
-                  min="1"
-                  max="10000"
-                  step="0.1"
-                  value={property.area || 0}
-                  onChange={(e) => handleInputChange('area', parseFloat(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="price">Loyer mensuel (€) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="1"
-                  max="50000"
-                  value={property.price || 0}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={property.description || ''}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows={4}
-                maxLength={2000}
-                disabled={isLoading}
-                placeholder="Décrivez les caractéristiques du bien..."
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                {(property.description || '').length}/2000 caractères
-              </p>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/agent/properties')}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Modification en cours...
-                  </>
-                ) : (
-                  "Modifier le bien"
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Images de la propriété</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PropertyImages
+              images={property.property_images || []}
+              propertyId={property.id}
+              onImageDeleted={handleImageDeleted}
+              onEditClick={() => {
+                toast({
+                  title: "Action non autorisée",
+                  description: "Seuls les propriétaires peuvent ajouter des images",
+                  variant: "destructive"
+                });
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
