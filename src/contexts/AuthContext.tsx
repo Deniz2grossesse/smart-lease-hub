@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +13,7 @@ interface UserProfile {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  created_at?: string;
 }
 
 interface AuthContextType {
@@ -115,7 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         type: profileType,
         first_name: data.first_name || undefined,
         last_name: data.last_name || undefined,
-        phone: data.phone || undefined
+        phone: data.phone || undefined,
+        created_at: data.created_at || undefined
       };
       
       setProfile(userProfile);
