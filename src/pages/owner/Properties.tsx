@@ -6,15 +6,18 @@ import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import PropertyPagination from "@/components/ui/property-pagination";
 import PropertyList from "@/components/property/PropertyList";
-import { usePagination } from "@/hooks/usePagination";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ErrorFallback from "@/components/ui/error-fallback";
 import NoDataFallback from "@/components/ui/no-data-fallback";
+import PaginationControls from "@/components/ui/pagination-controls";
+import { useState } from "react";
+
+const ITEMS_PER_PAGE = 6;
 
 const OwnerProperties = () => {
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (!user) {
     return (
@@ -28,13 +31,25 @@ const OwnerProperties = () => {
     );
   }
 
-  const { data: properties = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['owner-properties', user?.id],
+  const { data: propertiesData, isLoading, error, refetch } = useQuery({
+    queryKey: ['owner-properties', user?.id, currentPage],
     queryFn: async () => {
       if (!user?.id) {
         throw new Error("Utilisateur non connecté");
       }
 
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // Obtenir le count total pour cet utilisateur
+      const { count, error: countError } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
+      if (countError) throw countError;
+
+      // Obtenir les données avec pagination
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -43,6 +58,7 @@ const OwnerProperties = () => {
           property_applications (count)
         `)
         .eq('owner_id', user.id)
+        .range(from, to)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -55,26 +71,19 @@ const OwnerProperties = () => {
         throw error;
       }
       
-      return data || [];
+      return {
+        properties: data || [],
+        totalCount: count || 0
+      };
     },
     enabled: !!user?.id,
     retry: (failureCount, error) => {
-      // Retry up to 2 times for network errors
       return failureCount < 2 && !error.message.includes('non connecté');
     }
   });
 
-  const {
-    currentPage,
-    totalPages,
-    currentData,
-    goToPage,
-    canGoNext,
-    canGoPrevious
-  } = usePagination({
-    data: properties,
-    itemsPerPage: 6
-  });
+  const properties = propertiesData?.properties || [];
+  const totalCount = propertiesData?.totalCount || 0;
 
   if (error) {
     return (
@@ -108,7 +117,7 @@ const OwnerProperties = () => {
           <LoadingSpinner size="lg" />
           <span className="ml-3 text-lg">Chargement de vos propriétés...</span>
         </div>
-      ) : properties.length === 0 ? (
+      ) : properties.length === 0 && currentPage === 1 ? (
         <NoDataFallback
           title="Aucun bien immobilier"
           message="Vous n'avez pas encore ajouté de bien à votre portefeuille. Commencez par en créer un !"
@@ -120,22 +129,20 @@ const OwnerProperties = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <PropertyList
-              properties={currentData}
+              properties={properties}
               isLoading={false}
               baseRoute="/owner/properties"
               userType="owner"
             />
           </div>
 
-          {properties.length > 6 && (
-            <PropertyPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={goToPage}
-              canGoPrevious={canGoPrevious}
-              canGoNext={canGoNext}
-            />
-          )}
+          <PaginationControls
+            currentPage={currentPage}
+            totalItems={totalCount}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+            isLoading={isLoading}
+          />
         </>
       )}
     </div>

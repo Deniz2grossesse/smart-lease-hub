@@ -6,15 +6,18 @@ import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import PropertyPagination from "@/components/ui/property-pagination";
 import PropertyList from "@/components/property/PropertyList";
-import { usePagination } from "@/hooks/usePagination";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import ErrorFallback from "@/components/ui/error-fallback";
 import NoDataFallback from "@/components/ui/no-data-fallback";
+import PaginationControls from "@/components/ui/pagination-controls";
+import { useState } from "react";
+
+const ITEMS_PER_PAGE = 9;
 
 const AgentProperties = () => {
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (!user) {
     return (
@@ -28,9 +31,20 @@ const AgentProperties = () => {
     );
   }
 
-  const { data: properties = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['agent-properties'],
+  const { data: propertiesData, isLoading, error, refetch } = useQuery({
+    queryKey: ['agent-properties', currentPage],
     queryFn: async () => {
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // Obtenir le count total
+      const { count, error: countError } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) throw countError;
+
+      // Obtenir les données avec pagination
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -44,6 +58,7 @@ const AgentProperties = () => {
             phone
           )
         `)
+        .range(from, to)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -56,7 +71,10 @@ const AgentProperties = () => {
         throw error;
       }
       
-      return data || [];
+      return {
+        properties: data || [],
+        totalCount: count || 0
+      };
     },
     enabled: !!user,
     retry: (failureCount, error) => {
@@ -64,17 +82,8 @@ const AgentProperties = () => {
     }
   });
 
-  const {
-    currentPage,
-    totalPages,
-    currentData,
-    goToPage,
-    canGoNext,
-    canGoPrevious
-  } = usePagination({
-    data: properties,
-    itemsPerPage: 9
-  });
+  const properties = propertiesData?.properties || [];
+  const totalCount = propertiesData?.totalCount || 0;
 
   if (error) {
     return (
@@ -108,7 +117,7 @@ const AgentProperties = () => {
           <LoadingSpinner size="lg" />
           <span className="ml-3 text-lg">Chargement des propriétés...</span>
         </div>
-      ) : properties.length === 0 ? (
+      ) : properties.length === 0 && currentPage === 1 ? (
         <NoDataFallback
           title="Aucune propriété disponible"
           message="Il n'y a pas encore de propriétés dans le système. Commencez par en ajouter une !"
@@ -120,22 +129,20 @@ const AgentProperties = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <PropertyList
-              properties={currentData}
+              properties={properties}
               isLoading={false}
               baseRoute="/agent/properties"
               userType="agent"
             />
           </div>
 
-          {properties.length > 9 && (
-            <PropertyPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={goToPage}
-              canGoPrevious={canGoPrevious}
-              canGoNext={canGoNext}
-            />
-          )}
+          <PaginationControls
+            currentPage={currentPage}
+            totalItems={totalCount}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+            isLoading={isLoading}
+          />
         </>
       )}
     </div>
