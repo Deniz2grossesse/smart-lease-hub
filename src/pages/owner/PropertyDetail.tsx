@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PropertyImages from "@/components/property/PropertyImages";
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,14 +36,23 @@ const PropertyDetail = () => {
       try {
         setLoading(true);
         
-        // Récupérer les détails de la propriété
+        // Récupérer les détails de la propriété avec vérification du propriétaire
         const { data, error } = await supabase
           .from("properties")
-          .select("*")
+          .select(`
+            *,
+            property_images (*)
+          `)
           .eq("id", id)
+          .eq("owner_id", user?.id)
           .single();
           
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'PGRST116') {
+            throw new Error("Propriété non trouvée ou vous n'avez pas les droits d'accès");
+          }
+          throw error;
+        }
         
         setProperty(data);
         setFormData({
@@ -58,11 +68,8 @@ const PropertyDetail = () => {
           is_available: data.is_available
         });
         
-        // Récupérer les locataires associés à cette propriété (à implémenter)
-        // Pour l'instant, utilisons des données fictives
         setTenants([]);
         
-        // Récupérer les documents associés à cette propriété
         const { data: docsData, error: docsError } = await supabase
           .from("documents")
           .select("*")
@@ -75,8 +82,8 @@ const PropertyDetail = () => {
       } catch (error: any) {
         console.error("Erreur lors du chargement des détails de la propriété:", error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les détails de la propriété",
+          title: "Erreur de chargement",
+          description: error.message || "Impossible de charger les détails de la propriété",
           variant: "destructive"
         });
         navigate('/owner/dashboard');
@@ -86,7 +93,7 @@ const PropertyDetail = () => {
     };
     
     fetchPropertyDetails();
-  }, [id, navigate]);
+  }, [id, navigate, user?.id]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -114,7 +121,6 @@ const PropertyDetail = () => {
     try {
       if (!id) return;
       
-      // Validation des champs obligatoires
       if (!formData.title || !formData.address || !formData.city || !formData.postal_code || !formData.property_type || formData.rooms <= 0 || formData.area <= 0 || formData.price <= 0) {
         toast({
           title: "Formulaire incomplet",
@@ -124,7 +130,6 @@ const PropertyDetail = () => {
         return;
       }
       
-      // Mise à jour des informations de la propriété
       const { error } = await supabase
         .from("properties")
         .update({
@@ -139,11 +144,11 @@ const PropertyDetail = () => {
           description: formData.description,
           is_available: formData.is_available
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("owner_id", user?.id);
         
       if (error) throw error;
       
-      // Upload des nouvelles images si présentes
       if (images.length > 0) {
         const newImageUrls: string[] = [];
         
@@ -153,34 +158,36 @@ const PropertyDetail = () => {
           const filePath = `${id}/${i}-${Date.now()}.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
-            .from('property_images')
+            .from('property-images')
             .upload(filePath, image);
             
           if (uploadError) throw uploadError;
           
           const { data: { publicUrl } } = supabase.storage
-            .from('property_images')
+            .from('property-images')
             .getPublicUrl(filePath);
             
           newImageUrls.push(publicUrl);
         }
         
-        // Créer des entrées dans la table property_images pour chaque nouvelle image
-        const imageEntries = newImageUrls.map(url => ({
+        const imageEntries = newImageUrls.map((url, index) => ({
           property_id: id,
           url: url,
-          is_primary: false // par défaut
+          is_primary: index === 0 && (!property.property_images || property.property_images.length === 0)
         }));
         
-        // Ajouter les nouvelles images à la table property_images
         const { error: insertImagesError } = await supabase
           .from('property_images')
           .insert(imageEntries);
           
         if (insertImagesError) throw insertImagesError;
+        
+        toast({
+          title: "Images ajoutées avec succès",
+          description: `${images.length} image(s) ont été ajoutée(s) à votre propriété`,
+        });
       }
       
-      // Récupérer les données mises à jour de la propriété avec les images
       const { data: updatedPropertyData, error: fetchError } = await supabase
         .from("properties")
         .select(`
@@ -192,7 +199,6 @@ const PropertyDetail = () => {
         
       if (fetchError) throw fetchError;
       
-      // Mettre à jour l'objet propriété dans le state
       setProperty(updatedPropertyData);
       setFormData({
         title: updatedPropertyData.title,
@@ -211,15 +217,15 @@ const PropertyDetail = () => {
       setImages([]);
       
       toast({
-        title: "Succès",
-        description: "La propriété a été mise à jour avec succès"
+        title: "Propriété mise à jour avec succès",
+        description: "Les informations de votre propriété ont été sauvegardées"
       });
       
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour de la propriété:", error);
       toast({
-        title: "Erreur",
-        description: error.message,
+        title: "Erreur de sauvegarde",
+        description: error.message || "Impossible de sauvegarder les modifications",
         variant: "destructive"
       });
     }
@@ -229,17 +235,17 @@ const PropertyDetail = () => {
     try {
       if (!id) return;
       
-      // Supprimer la propriété
       const { error } = await supabase
         .from("properties")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("owner_id", user?.id);
         
       if (error) throw error;
       
       toast({
-        title: "Succès",
-        description: "La propriété a été supprimée avec succès"
+        title: "Propriété supprimée avec succès",
+        description: "La propriété a été définitivement supprimée de votre portefeuille"
       });
       
       navigate('/owner/dashboard');
@@ -247,8 +253,8 @@ const PropertyDetail = () => {
     } catch (error: any) {
       console.error("Erreur lors de la suppression de la propriété:", error);
       toast({
-        title: "Erreur",
-        description: error.message,
+        title: "Erreur de suppression",
+        description: error.message || "Impossible de supprimer cette propriété",
         variant: "destructive"
       });
     }
@@ -262,7 +268,6 @@ const PropertyDetail = () => {
         
       if (error) throw error;
       
-      // Créer un lien de téléchargement
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
@@ -271,12 +276,27 @@ const PropertyDetail = () => {
       link.click();
       document.body.removeChild(link);
       
+      toast({
+        title: "Document téléchargé",
+        description: `Le document "${doc.name}" a été téléchargé avec succès`
+      });
+      
     } catch (error: any) {
       console.error("Erreur lors du téléchargement du document:", error);
       toast({
-        title: "Erreur",
+        title: "Erreur de téléchargement",
         description: "Impossible de télécharger ce document",
         variant: "destructive"
+      });
+    }
+  };
+  
+  const handleImageDeleted = (deletedImageId: string) => {
+    if (property && property.property_images) {
+      const updatedImages = property.property_images.filter((img: any) => img.id !== deletedImageId);
+      setProperty({
+        ...property,
+        property_images: updatedImages
       });
     }
   };
@@ -286,7 +306,7 @@ const PropertyDetail = () => {
       <Layout>
         <div className="container mx-auto py-6">
           <div className="flex justify-center items-center h-64">
-            <p>Chargement...</p>
+            <p>Chargement des détails de la propriété...</p>
           </div>
         </div>
       </Layout>
@@ -298,8 +318,8 @@ const PropertyDetail = () => {
       <Layout>
         <div className="container mx-auto py-6">
           <Alert variant="destructive">
-            <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription>Impossible de trouver cette propriété</AlertDescription>
+            <AlertTitle>Propriété introuvable</AlertTitle>
+            <AlertDescription>Cette propriété n'existe pas ou vous n'avez pas les droits d'accès</AlertDescription>
           </Alert>
           <Button className="mt-4" onClick={() => navigate('/owner/dashboard')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -472,6 +492,7 @@ const PropertyDetail = () => {
                         name="description" 
                         value={formData.description} 
                         onChange={handleChange} 
+                        placeholder="Décrivez votre bien immobilier..."
                       />
                     </div>
                     <div className="grid gap-2">
@@ -495,6 +516,7 @@ const PropertyDetail = () => {
                         id="images" 
                         type="file" 
                         multiple 
+                        accept="image/*"
                         onChange={handleImageChange} 
                       />
                     </div>
@@ -553,37 +575,23 @@ const PropertyDetail = () => {
                           </div>
                         </div>
                         
-                        {property.description && (
-                          <div className="mt-4">
-                            <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+                        <div className="mt-4">
+                          <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+                          {property.description && property.description.trim() ? (
                             <p className="mt-1 whitespace-pre-wrap">{property.description}</p>
-                          </div>
-                        )}
+                          ) : (
+                            <p className="mt-1 text-muted-foreground italic">Pas de description disponible</p>
+                          )}
+                        </div>
                       </div>
                       
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Photos</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {property.property_images && property.property_images.length > 0 ? (
-                            property.property_images.map((image: {id: string, url: string}, index: number) => (
-                              <div key={image.id} className="aspect-square relative overflow-hidden rounded-md">
-                                <img 
-                                  src={image.url} 
-                                  alt={`Photo ${index + 1}`} 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ))
-                          ) : (
-                            <div className="col-span-2 p-8 border rounded-md flex flex-col items-center justify-center text-center">
-                              <p className="text-muted-foreground">Aucune photo disponible</p>
-                              <Button variant="outline" className="mt-2" onClick={() => setEditing(true)}>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Ajouter des photos
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                        <PropertyImages 
+                          images={property.property_images || []}
+                          propertyId={property.id}
+                          onImageDeleted={handleImageDeleted}
+                          onEditClick={() => setEditing(true)}
+                        />
                       </div>
                     </div>
                   </div>
