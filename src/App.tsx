@@ -43,68 +43,70 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50 w-full">
-          <Routes>
-            {/* Page d'accueil publique */}
-            <Route path="/" element={<Index />} />
-            
-            {/* Routes Agent */}
-            <Route path="/agent/*" element={
-              <ProtectedRoute userTypes={['agent']}>
-                <Layout>
-                  <Routes>
-                    <Route path="dashboard" element={<AgentDashboard />} />
-                    <Route path="properties" element={<AgentProperties />} />
-                    <Route path="properties/new" element={<AgentPropertyNew />} />
-                    <Route path="properties/:id" element={<AgentPropertyDetail />} />
-                    <Route path="properties/:id/edit" element={<AgentPropertyEdit />} />
-                    <Route path="applications" element={<AgentApplications />} />
-                    <Route path="payments" element={<AgentPayments />} />
-                    <Route path="alerts" element={<AgentAlerts />} />
-                    <Route path="stats" element={<AgentStats />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Routes Owner - URLs uniformisées avec /properties/:id */}
-            <Route path="/owner/*" element={
-              <ProtectedRoute userTypes={['owner']}>
-                <Layout>
-                  <Routes>
-                    <Route path="dashboard" element={<OwnerDashboard />} />
-                    <Route path="properties" element={<OwnerProperties />} />
-                    <Route path="properties/new" element={<OwnerPropertyNew />} />
-                    <Route path="properties/:id" element={<OwnerPropertyDetail />} />
-                    <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
-                    <Route path="tenants" element={<OwnerTenants />} />
-                    <Route path="tenants/:id" element={<OwnerTenantDetail />} />
-                    <Route path="documents" element={<OwnerDocuments />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Routes Tenant */}
-            <Route path="/tenant/*" element={
-              <ProtectedRoute userTypes={['tenant']}>
-                <Layout>
-                  <Routes>
-                    <Route path="dashboard" element={<TenantDashboard />} />
-                    <Route path="application" element={<TenantApplication />} />
-                    <Route path="applications" element={<TenantApplications />} />
-                    <Route path="account" element={<TenantAccount />} />
-                    <Route path="alerts" element={<TenantAlerts />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Page 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-        <Toaster />
+        <ErrorBoundary>
+          <div className="min-h-screen bg-gray-50 w-full">
+            <Routes>
+              {/* Page d'accueil publique */}
+              <Route path="/" element={<Index />} />
+              
+              {/* Routes Agent */}
+              <Route path="/agent/*" element={
+                <ProtectedRoute userTypes={['agent']}>
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<AgentDashboard />} />
+                      <Route path="properties" element={<AgentProperties />} />
+                      <Route path="properties/new" element={<AgentPropertyNew />} />
+                      <Route path="properties/:id" element={<AgentPropertyDetail />} />
+                      <Route path="properties/:id/edit" element={<AgentPropertyEdit />} />
+                      <Route path="applications" element={<AgentApplications />} />
+                      <Route path="payments" element={<AgentPayments />} />
+                      <Route path="alerts" element={<AgentAlerts />} />
+                      <Route path="stats" element={<AgentStats />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Routes Owner - URLs uniformisées avec /properties/:id */}
+              <Route path="/owner/*" element={
+                <ProtectedRoute userTypes={['owner']}>
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<OwnerDashboard />} />
+                      <Route path="properties" element={<OwnerProperties />} />
+                      <Route path="properties/new" element={<OwnerPropertyNew />} />
+                      <Route path="properties/:id" element={<OwnerPropertyDetail />} />
+                      <Route path="properties/:id/edit" element={<OwnerPropertyEdit />} />
+                      <Route path="tenants" element={<OwnerTenants />} />
+                      <Route path="tenants/:id" element={<OwnerTenantDetail />} />
+                      <Route path="documents" element={<OwnerDocuments />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Routes Tenant */}
+              <Route path="/tenant/*" element={
+                <ProtectedRoute userTypes={['tenant']}>
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<TenantDashboard />} />
+                      <Route path="application" element={<TenantApplication />} />
+                      <Route path="applications" element={<TenantApplications />} />
+                      <Route path="account" element={<TenantAccount />} />
+                      <Route path="alerts" element={<TenantAlerts />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Page 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Toaster />
+        </ErrorBoundary>
       </AuthProvider>
     </Router>
   );

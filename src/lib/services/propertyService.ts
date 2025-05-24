@@ -1,22 +1,17 @@
 
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
+import { PropertyFormData, Property } from '@/lib/types/property';
+import { validatePropertyForm, sanitizeInput } from '@/lib/utils/validation';
 
-export interface PropertyFormData {
-  title: string;
-  address: string;
-  city: string;
-  postal_code: string;
-  property_type: string;
-  rooms: number;
-  area: number;
-  price: number;
-  description?: string;
-  images?: File[];
-}
-
-export const createProperty = async (propertyData: PropertyFormData) => {
+export const createProperty = async (propertyData: PropertyFormData): Promise<Property> => {
   try {
+    // Validate form data
+    const errors = validatePropertyForm(propertyData);
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !sessionData.session?.user) {
@@ -25,21 +20,24 @@ export const createProperty = async (propertyData: PropertyFormData) => {
     
     const userId = sessionData.session.user.id;
     
+    // Sanitize input data
+    const sanitizedData = {
+      title: sanitizeInput(propertyData.title),
+      address: sanitizeInput(propertyData.address),
+      city: sanitizeInput(propertyData.city),
+      postal_code: sanitizeInput(propertyData.postal_code),
+      property_type: propertyData.property_type,
+      rooms: propertyData.rooms,
+      area: propertyData.area,
+      price: propertyData.price,
+      description: propertyData.description ? sanitizeInput(propertyData.description) : null,
+      owner_id: userId,
+    };
+    
     // 1. Création de la propriété dans la base de données
     const { data: property, error } = await supabase
       .from('properties')
-      .insert({
-        title: propertyData.title.trim(),
-        address: propertyData.address.trim(),
-        city: propertyData.city.trim(),
-        postal_code: propertyData.postal_code.trim(),
-        property_type: propertyData.property_type,
-        rooms: propertyData.rooms,
-        area: propertyData.area,
-        price: propertyData.price,
-        description: propertyData.description?.trim() || null,
-        owner_id: userId,
-      })
+      .insert(sanitizedData)
       .select()
       .single();
 
@@ -128,7 +126,7 @@ export const createProperty = async (propertyData: PropertyFormData) => {
   }
 };
 
-export const fetchProperties = async () => {
+export const fetchProperties = async (): Promise<Property[]> => {
   try {
     const { data: properties, error } = await supabase
       .from('properties')
@@ -143,7 +141,7 @@ export const fetchProperties = async () => {
       throw error;
     }
 
-    return properties;
+    return properties || [];
   } catch (error: any) {
     console.error("Erreur lors de la récupération des propriétés:", error);
     toast({
@@ -155,7 +153,7 @@ export const fetchProperties = async () => {
   }
 };
 
-export const deleteProperty = async (id: string) => {
+export const deleteProperty = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('properties')
