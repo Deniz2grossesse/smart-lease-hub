@@ -34,7 +34,11 @@ const PropertyNew = () => {
       });
       navigate('/agent/properties');
     } catch (error) {
-      // Error is already handled in createProperty service
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la propriété",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

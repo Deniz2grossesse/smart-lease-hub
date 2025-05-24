@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 const AgentPropertyEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +51,6 @@ const AgentPropertyEdit = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching property:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les détails de la propriété",
@@ -61,7 +61,6 @@ const AgentPropertyEdit = () => {
       }
       setProperty(data);
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les détails de la propriété",
@@ -96,7 +95,6 @@ const AgentPropertyEdit = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error updating property:', error);
         toast({
           title: "Erreur",
           description: "Impossible de modifier le bien",
@@ -112,7 +110,6 @@ const AgentPropertyEdit = () => {
       
       navigate('/agent/properties');
     } catch (error) {
-      console.error("Erreur lors de la modification:", error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le bien",
@@ -134,8 +131,8 @@ const AgentPropertyEdit = () => {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement des données...</p>
+          <LoadingSpinner size="lg" />
+          <p className="mt-4">Chargement des données...</p>
         </div>
       </div>
     );
@@ -317,7 +314,7 @@ const AgentPropertyEdit = () => {
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <LoadingSpinner size="sm" className="mr-2" />
                     Modification en cours...
                   </>
                 ) : (

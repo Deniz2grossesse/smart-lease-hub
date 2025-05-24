@@ -67,6 +67,8 @@ const Sidebar = () => {
     return null;
   }
 
+  const currentMenuItems = menuItems[userType] || [];
+
   return (
     <ShadcnSidebar>
       <SidebarRail />
@@ -82,7 +84,7 @@ const Sidebar = () => {
 
       <SidebarContent>
         <SidebarMenu>
-          {menuItems[userType].map((item) => (
+          {currentMenuItems.map((item) => (
             <SidebarMenuItem key={item.path}>
               <SidebarMenuButton
                 asChild

@@ -54,7 +54,12 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
         try {
           const { error: uploadError } = await supabase.storage
             .from('property-images')
-            .upload(filePath, image);
+            .upload(filePath, image, {
+              metadata: {
+                user_id: userId,
+                property_id: property.id
+              }
+            });
             
           if (uploadError) {
             continue;
