@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building, Search, Users, Shield, Zap, CheckCircle } from 'lucide-react';
+import Logo from '@/components/layout/Logo';
 
 const Index: React.FC = () => {
   return (
@@ -13,8 +14,8 @@ const Index: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Building className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">ImmoConnect</span>
+              <Logo className="h-8 w-8" />
+              <span className="text-xl font-bold text-gray-900">e-mmoLink</span>
             </div>
             <nav className="flex space-x-6">
               <Link to="/properties" className="text-blue-600 hover:text-blue-700 font-medium">
@@ -61,7 +62,7 @@ const Index: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Pourquoi choisir ImmoConnect ?
+              Pourquoi choisir e-mmoLink ?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Une solution complète qui simplifie la recherche de logement et la gestion immobilière
@@ -209,8 +210,8 @@ const Index: React.FC = () => {
             {/* Brand */}
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Building className="h-6 w-6" />
-                <span className="text-lg font-bold">ImmoConnect</span>
+                <Logo className="h-6 w-6" />
+                <span className="text-lg font-bold">e-mmoLink</span>
               </div>
               <p className="text-gray-400">
                 La plateforme moderne pour simplifier la recherche de logement 
@@ -248,7 +249,7 @@ const Index: React.FC = () => {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 ImmoConnect. Tous droits réservés.</p>
+            <p>&copy; 2024 e-mmoLink. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
