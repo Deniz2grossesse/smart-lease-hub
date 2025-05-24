@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AuthGuard from "@/components/auth/AuthGuard";
+import PropertyPagination from "@/components/ui/property-pagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Property } from "@/lib/types/property";
 
 const AgentProperties = () => {
@@ -30,15 +32,30 @@ const AgentProperties = () => {
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Error fetching properties:', error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les propriétés",
+            variant: "destructive"
+          });
           throw error;
         }
         return (data || []) as Property[];
       } catch (error) {
-        console.error('Error in properties query:', error);
         throw error;
       }
     }
+  });
+
+  const {
+    currentPage,
+    totalPages,
+    currentData,
+    goToPage,
+    canGoNext,
+    canGoPrevious
+  } = usePagination({
+    data: properties,
+    itemsPerPage: 6
   });
 
   const deletePropertyMutation = useMutation({
@@ -58,7 +75,6 @@ const AgentProperties = () => {
       });
     },
     onError: (error) => {
-      console.error('Error deleting property:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le bien",
@@ -92,9 +108,9 @@ const AgentProperties = () => {
   return (
     <AuthGuard requiredUserTypes={['agent']}>
       <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 animate-fade-in">
           <h1 className="text-3xl font-bold">Gestion des biens</h1>
-          <Button asChild>
+          <Button asChild className="hover-scale">
             <Link to="/agent/properties/new">
               <Plus className="mr-2 h-4 w-4" />
               Ajouter un bien
@@ -102,7 +118,7 @@ const AgentProperties = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-scale-in">
           {isLoading ? (
             <div className="col-span-full text-center py-8">
               <LoadingSpinner className="mx-auto mb-4" />
@@ -116,14 +132,14 @@ const AgentProperties = () => {
               </CardContent>
             </Card>
           ) : (
-            properties.map((property) => (
-              <Card key={property.id}>
+            currentData.map((property, index) => (
+              <Card key={property.id} className="hover-scale transition-all duration-200">
                 {property.property_images?.[0] && (
                   <div className="aspect-video relative overflow-hidden">
                     <img 
                       src={property.property_images[0].url} 
                       alt={property.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
                     />
                   </div>
                 )}
@@ -150,13 +166,13 @@ const AgentProperties = () => {
                   </div>
                   
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="hover-scale">
                       <Link to={`/agent/properties/${property.id}`}>
                         <Eye className="mr-2 h-4 w-4" />
                         Voir
                       </Link>
                     </Button>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="hover-scale">
                       <Link to={`/agent/properties/${property.id}/edit`}>
                         <Edit className="mr-2 h-4 w-4" />
                         Modifier
@@ -167,6 +183,7 @@ const AgentProperties = () => {
                       size="sm" 
                       onClick={() => handleDeleteProperty(property.id)}
                       disabled={deletePropertyMutation.isPending}
+                      className="hover-scale"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Supprimer
@@ -177,6 +194,16 @@ const AgentProperties = () => {
             ))
           )}
         </div>
+
+        {properties.length > 6 && (
+          <PropertyPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+          />
+        )}
       </div>
     </AuthGuard>
   );

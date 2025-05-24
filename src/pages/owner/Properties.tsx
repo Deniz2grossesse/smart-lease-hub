@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import PropertyPagination from "@/components/ui/property-pagination";
+import { usePagination } from "@/hooks/usePagination";
 
 const OwnerProperties = () => {
   const { user } = useAuth();
@@ -27,7 +29,6 @@ const OwnerProperties = () => {
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Error fetching properties:', error);
           toast({
             title: "Erreur",
             description: "Impossible de charger les propriétés",
@@ -37,11 +38,22 @@ const OwnerProperties = () => {
         }
         return data;
       } catch (error) {
-        console.error('Error in properties query:', error);
         throw error;
       }
     },
     enabled: !!user?.id
+  });
+
+  const {
+    currentPage,
+    totalPages,
+    currentData,
+    goToPage,
+    canGoNext,
+    canGoPrevious
+  } = usePagination({
+    data: properties,
+    itemsPerPage: 6
   });
 
   if (!user) {
@@ -71,9 +83,9 @@ const OwnerProperties = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 animate-fade-in">
         <h1 className="text-3xl font-bold">Mes biens</h1>
-        <Button asChild>
+        <Button asChild className="hover-scale">
           <Link to="/owner/properties/new">
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un bien
@@ -81,7 +93,7 @@ const OwnerProperties = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-scale-in">
         {isLoading ? (
           <div className="col-span-full text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -95,14 +107,14 @@ const OwnerProperties = () => {
             </CardContent>
           </Card>
         ) : (
-          properties.map((property) => (
-            <Card key={property.id}>
+          currentData.map((property) => (
+            <Card key={property.id} className="hover-scale transition-all duration-200">
               {property.property_images?.[0] && (
                 <div className="aspect-video relative overflow-hidden">
                   <img 
                     src={property.property_images[0].url} 
                     alt={property.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
                   />
                 </div>
               )}
@@ -132,13 +144,13 @@ const OwnerProperties = () => {
                 </div>
                 
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" asChild className="hover-scale">
                     <Link to={`/owner/properties/${property.id}`}>
                       <Eye className="mr-2 h-4 w-4" />
                       Voir
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" asChild className="hover-scale">
                     <Link to={`/owner/properties/${property.id}/edit`}>
                       <Edit className="mr-2 h-4 w-4" />
                       Modifier
@@ -150,6 +162,16 @@ const OwnerProperties = () => {
           ))
         )}
       </div>
+
+      {properties.length > 6 && (
+        <PropertyPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+        />
+      )}
     </div>
   );
 };

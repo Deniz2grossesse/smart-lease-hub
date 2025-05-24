@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Property, PropertyFormData } from '@/lib/types/property';
@@ -44,7 +45,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       .single();
 
     if (error) {
-      console.error('Database error:', error);
       throw error;
     }
 
@@ -62,7 +62,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
             .upload(filePath, image);
             
           if (uploadError) {
-            console.error('Upload error:', uploadError);
             continue; // Continue avec les autres images même si une échoue
           }
           
@@ -73,7 +72,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
             
           imageUrls.push(publicUrl);
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
           continue;
         }
       }
@@ -91,7 +89,7 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
           .insert(imageEntries);
           
         if (imagesError) {
-          console.error('Error inserting images:', imagesError);
+          // Continue même si l'insertion des images échoue
         }
       }
     }
@@ -107,7 +105,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
       .single();
     
     if (fetchError) {
-      console.error('Fetch error:', fetchError);
       throw fetchError;
     }
 
@@ -118,7 +115,6 @@ export const createProperty = async (propertyData: PropertyFormData): Promise<Pr
     
     return completeProperty as Property;
   } catch (error: any) {
-    console.error("Erreur lors de la création de la propriété:", error);
     toast({
       title: "Erreur lors de l'ajout du bien",
       description: error.message,
@@ -139,13 +135,11 @@ export const fetchProperties = async (): Promise<Property[]> => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Fetch properties error:', error);
       throw error;
     }
 
     return (properties || []) as Property[];
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des propriétés:", error);
     toast({
       title: "Erreur",
       description: "Impossible de récupérer vos biens immobiliers",
@@ -163,7 +157,6 @@ export const deleteProperty = async (id: string): Promise<boolean> => {
       .eq('id', id);
 
     if (error) {
-      console.error('Delete error:', error);
       throw error;
     }
 
@@ -174,7 +167,6 @@ export const deleteProperty = async (id: string): Promise<boolean> => {
 
     return true;
   } catch (error: any) {
-    console.error("Erreur lors de la suppression de la propriété:", error);
     toast({
       title: "Erreur",
       description: "Impossible de supprimer ce bien immobilier",
