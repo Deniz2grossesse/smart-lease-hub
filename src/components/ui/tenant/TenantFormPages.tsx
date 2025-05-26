@@ -1,7 +1,9 @@
 import React from "react";
+import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const PersonalPage = ({ formData, handleInputChange, handleFileChange }) => (
   <div>
@@ -74,7 +76,7 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
           <Label htmlFor="otherSituation">Décrivez votre situation:</Label>
           <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
         </div>
-        <div> 
+        <div>
           <Label htmlFor="otherFile">Autres documents à transmettre:</Label>
           <Input type="file" id="otherFile" name="otherFile" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
@@ -119,25 +121,47 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
   </div>
 );
 
-const GuarantorPage = ({ formData, handleFileChange }) => (
-  <div>
+const GuarantorPage = ({ formData, handleFileChange }) => {
+  const [selectedOption, setSelectedOption] = useState("");
+
+  return (
     <div>
-      <Label htmlFor="cardId">Carte d'Identité:</Label>
-      <Input type="file" id="cardId" name="cardId" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+      <div>
+        <Label htmlFor="guarantorType">Type de Garant:</Label>
+        <Select value={selectedOption} onValueChange={setSelectedOption}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionnez une option" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="visale">Visale</SelectItem>
+            <SelectItem value="personnePhysique">Personne Physique</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {selectedOption === "visale" ? (
+        <div>
+          <Label htmlFor="visaleCertificate">Attestation Visale:</Label>
+          <Input type="file" id="visaleCertificate" name="visaleCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+        </div>
+      ) : selectedOption === "personnePhysique" ? (
+        <>
+          <div>
+            <Label htmlFor="cardId">Carte d'Identité:</Label>
+            <Input type="file" id="cardId" name="cardId" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+          </div>
+          <div>
+            <Label htmlFor="lastPaySlipsGuarantor">3 Derniers Bulletins de Salaire:</Label>
+            <Input type="file" id="lastPaySlipsGuarantor" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+          </div>
+          <div>
+            <Label htmlFor="residenceCertificateGuarantor">Certificat de Résidence:</Label>
+            <Input type="file" id="residenceCertificateGuarantor" name="residenceCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+          </div>
+        </>
+      ) : null}
     </div>
-    <div>
-      <Label htmlFor="lastPaySlipsGuarantor">3 Derniers Bulletins de Salaire:</Label>
-      <Input type="file" id="lastPaySlipsGuarantor" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-    </div>
-    <div>
-      <Label htmlFor="residenceCertificateGuarantor">Certificat de Résidence:</Label>
-      <Input type="file" id="residenceCertificateGuarantor" name="residenceCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-    </div>
-    <div>
-      <Label htmlFor="visaleCertificate">Attestation Visale:</Label>
-      <Input type="file" id="visaleCertificate" name="visaleCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-    </div>
-  </div>
-);
+  );
+};
 
 export { PersonalPage, ProfessionalPage, GuarantorPage };
