@@ -7,31 +7,42 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const PersonalPage = ({ formData, handleInputChange, handleFileChange }) => (
   <div>
-    <div>
-      <Label htmlFor="name">Nom:</Label>
-      <Input type="text" id="name" name="name" value={formData.name} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+
+    <div className="flex justify-between">
+
+      <div className="p-1 w-[45%]">
+        <div>
+          <Label htmlFor="lastname">Prénom:</Label>
+          <Input type="text" id="lastname" name="lastname" value={formData.lastname} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+        <div>
+          <Label htmlFor="name" className="mb-2">Nom:</Label>
+          <Input type="text" id="name" name="name" value={formData.name} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+        <div>
+          <Label htmlFor="dateOfBirth">Date de Naissance:</Label>
+          <Input type="date" id="dateOfBirth" name="dateOfBirth" value={formData.dateOfBirth} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+      </div>
+
+      <div className="p-1 w-[45%]">
+        <div>
+          <Label htmlFor="address">Code Postal:</Label>
+          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+        <div>
+          <Label htmlFor="address">Ville:</Label>
+          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+        <div>
+          <Label htmlFor="address">Complément d'adresse:</Label>
+          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+        </div>
+      </div>
+
     </div>
-    <div>
-      <Label htmlFor="lastname">Prénom:</Label>
-      <Input type="text" id="lastname" name="lastname" value={formData.lastname} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-    </div>
-    <div>
-      <Label htmlFor="dateOfBirth">Date de Naissance:</Label>
-      <Input type="date" id="dateOfBirth" name="dateOfBirth" value={formData.dateOfBirth} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-    </div>
-    <div>
-      <Label htmlFor="address">Complément d'adresse:</Label>
-      <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-    </div>
-    <div>
-      <Label htmlFor="address">Code Postal:</Label>
-      <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-    </div>
-    <div>
-      <Label htmlFor="address">Ville:</Label>
-      <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-    </div>
-    <div className="grid w-full grid-cols-4">
+
+    <div className="grid w-full grid-cols-4 m-auto mt-10">
       <div className="m-2">
         <Label htmlFor="idCard">Carte d'Identité:</Label>
         <Input type="file" id="idCard" name="idCard" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
@@ -72,11 +83,11 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
     </div>
     {formData.situation === 'autre' && (
       <>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="otherSituation">Décrivez votre situation:</Label>
           <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
         </div>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="otherFile">Autres documents à transmettre:</Label>
           <Input type="file" id="otherFile" name="otherFile" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
@@ -84,36 +95,36 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
     )}
     {(formData.situation === 'CDD' || formData.situation === 'CDI') && (
       <>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
           <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="employementContract">Contrat de Travail:</Label>
           <Input type="file" id="employementContract" name="employementContract" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
       </>
     )}
     {formData.situation === 'retraité' && (
-      <div>
+      <div className="mt-5">
         <Label htmlFor="retirementCertificate">Justificatif de Pension Retraite:</Label>
         <Input type="file" id="retirementCertificate" name="retirementCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
       </div>
     )}
     {formData.situation === 'indépendant' && (
       <>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="kbisCertificate">Kbis:</Label>
           <Input type="file" id="kbisCertificate" name="kbisCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
-        <div>
+        <div className="mt-5">
           <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
           <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
       </>
     )}
     {formData.situation === 'étudiant' && (
-      <div>
+      <div className="mt-5">
         <Label htmlFor="schoolCertificate">Certificat de Scolarité:</Label>
         <Input type="file" id="schoolCertificate" name="schoolCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
       </div>

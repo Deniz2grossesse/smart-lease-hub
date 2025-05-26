@@ -6,6 +6,8 @@ import { PersonalPage, ProfessionalPage, GuarantorPage } from "@/components/ui/t
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from '@radix-ui/react-select';
+import { SeparatorHorizontal } from 'lucide-react';
 
 const TenantForm = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,10 +103,12 @@ const TenantForm = () => {
         <CardDescription>Veuillez remplir les informations suivantes.</CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="min-h-[50vh]">
         {renderPageContent()}
+      </CardContent>
 
-        <Pagination>
+      <CardFooter className="block">
+        <Pagination className="mb-10 mt-5">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious onClick={handlePrevious} />
@@ -130,16 +134,15 @@ const TenantForm = () => {
           </PaginationContent>
         </Pagination>
 
-        <div className="flex">
+        <div className="flex mb-5">
           <Checkbox id="checkbox" className="mr-3" onChange={handleCheckboxChange} />
           <Label htmlFor="checkbox">En soumettant ma candidature, j'affirme avoir lu les conditions d'utilisations et la politique des données privées</Label>
         </div>
 
-      </CardContent>
+        <Button type="submit" disabled={!isCheckboxChecked} className="block">Soumettre</Button>
 
-      <CardFooter>
-        <Button type="submit" disabled={!isCheckboxChecked}>Soumettre</Button>
       </CardFooter>
+
     </Card>
   );
 };
