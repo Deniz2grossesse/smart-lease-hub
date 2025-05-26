@@ -60,7 +60,7 @@ const Sidebar = () => {
       { title: "Alertes", path: "/agent/alerts", icon: Bell },
       { title: "Candidatures", path: "/agent/applications", icon: Folder },
       { title: "Gestion des biens", path: "/agent/properties", icon: Building },
-      { title: "Suivi des paiements", path: "/agent/payments", icon: FileText },
+      // { title: "Suivi des paiements", path: "/agent/payments", icon: FileText },
       { title: "Statistiques", path: "/agent/stats", icon: ChevronRight },
     ]
   };

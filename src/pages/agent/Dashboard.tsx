@@ -191,7 +191,7 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Paiements de loyer
@@ -221,7 +221,7 @@ const AgentDashboard = () => {
                 <span className="text-red-600">{pendingRent} € en attente</span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
         
         <Card>
@@ -233,11 +233,11 @@ const AgentDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-2 md:grid-cols-3 mb-6">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
                 <TabsTrigger value="applications">Candidatures</TabsTrigger>
                 <TabsTrigger value="properties">Biens</TabsTrigger>
-                <TabsTrigger value="payments">Paiements</TabsTrigger>
+                {/* <TabsTrigger value="payments">Paiements</TabsTrigger> */}
               </TabsList>
               
               <div className="mb-6">
@@ -254,7 +254,7 @@ const AgentDashboard = () => {
               </div>
               
               <TabsContent value="overview">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Dernières candidatures</CardTitle>
@@ -284,7 +284,7 @@ const AgentDashboard = () => {
                     </CardContent>
                   </Card>
                   
-                  <Card>
+                  {/* <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Paiements en attente</CardTitle>
                     </CardHeader>
@@ -319,7 +319,7 @@ const AgentDashboard = () => {
                         Voir tous les paiements
                       </Button>
                     </CardContent>
-                  </Card>
+                  </Card> */}
                 </div>
               </TabsContent>
               
