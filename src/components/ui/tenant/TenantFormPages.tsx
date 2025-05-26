@@ -69,31 +69,53 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
       </Select>
     </div>
     {formData.situation === 'autre' && (
+      <>
+        <div>
+          <Label htmlFor="otherSituation">Décrivez votre situation:</Label>
+          <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
+        </div>
+        <div> 
+          <Label htmlFor="otherFile">Autres documents à transmettre:</Label>
+          <Input type="file" id="otherFile" name="otherFile" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+      </>
+    )}
+    {(formData.situation === 'CDD' || formData.situation === 'CDI') && (
+      <>
+        <div>
+          <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
+          <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+        <div>
+          <Label htmlFor="employementContract">Contrat de Travail:</Label>
+          <Input type="file" id="employementContract" name="employementContract" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+      </>
+    )}
+    {formData.situation === 'retraité' && (
       <div>
-        <Label htmlFor="otherSituation">Autre Situation:</Label>
-        <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
+        <Label htmlFor="retirementCertificate">Justificatif de Pension Retraite:</Label>
+        <Input type="file" id="retirementCertificate" name="retirementCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
       </div>
     )}
-    <div>
-      <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
-      <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-    </div>
-    <div>
-      <Label htmlFor="taxAssessmentNotice">Avis d'Impôt:</Label>
-      <Input type="file" id="taxAssessmentNotice" name="taxAssessmentNotice" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-    </div>
-    <div>
-      <Label htmlFor="employementContract">Contrat de Travail:</Label>
-      <Input type="file" id="employementContract" name="employementContract" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-    </div>
-    <div>
-      <Label htmlFor="kbisCertificate">Kbis:</Label>
-      <Input type="file" id="kbisCertificate" name="kbisCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-    </div>
-    <div>
-      <Label htmlFor="retirementCertificate">Justificatif de Pension Retraite:</Label>
-      <Input type="file" id="retirementCertificate" name="retirementCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-    </div>
+    {formData.situation === 'indépendant' && (
+      <>
+        <div>
+          <Label htmlFor="kbisCertificate">Kbis:</Label>
+          <Input type="file" id="kbisCertificate" name="kbisCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+        <div>
+          <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
+          <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+      </>
+    )}
+    {formData.situation === 'étudiant' && (
+      <div>
+        <Label htmlFor="schoolCertificate">Certificat de Scolarité:</Label>
+        <Input type="file" id="schoolCertificate" name="schoolCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+      </div>
+    )}
   </div>
 );
 
