@@ -4,140 +4,132 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import FileInput from '@/components/ui/input-file';
+import FileInputGroup from '@/components/ui/input-file-group';
+import LabelInputGroup from '@/components/ui/label-input-group';
 
 const PersonalPage = ({ formData, handleInputChange, handleFileChange }) => (
-  <div>
+  <div className="mb-20 mt-10">
 
-    <div className="flex justify-between">
+    <h3 className="text-2xl font-semibold text-stone-600 mb-5">État civil</h3>
 
-      <div className="p-1 w-[45%]">
-        <div>
-          <Label htmlFor="lastname">Prénom:</Label>
-          <Input type="text" id="lastname" name="lastname" value={formData.lastname} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-        <div>
-          <Label htmlFor="name" className="mb-2">Nom:</Label>
-          <Input type="text" id="name" name="name" value={formData.name} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-        <div>
-          <Label htmlFor="dateOfBirth">Date de Naissance:</Label>
-          <Input type="date" id="dateOfBirth" name="dateOfBirth" value={formData.dateOfBirth} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-      </div>
+    <div className="p-1 w-[100%] min-w-[240px] m-auto">
 
-      <div className="p-1 w-[45%]">
-        <div>
-          <Label htmlFor="address">Code Postal:</Label>
-          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-        <div>
-          <Label htmlFor="address">Ville:</Label>
-          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-        <div>
-          <Label htmlFor="address">Complément d'adresse:</Label>
-          <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-        </div>
-      </div>
+      <LabelInputGroup>
+        <Label htmlFor="lastname">Prénom:</Label>
+        <Input type="text" id="lastname" name="lastname" value={formData.lastname} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+      <LabelInputGroup>
+        <Label htmlFor="name" className="mb-2">Nom:</Label>
+        <Input type="text" id="name" name="name" value={formData.name} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+      <LabelInputGroup>
+        <Label htmlFor="dateOfBirth">Date de Naissance:</Label>
+        <Input type="date" id="dateOfBirth" name="dateOfBirth" value={formData.dateOfBirth} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+
+      <LabelInputGroup>
+        <Label htmlFor="address">Code Postal:</Label>
+        <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+      <LabelInputGroup>
+        <Label htmlFor="address">Ville:</Label>
+        <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+      <LabelInputGroup>
+        <Label htmlFor="address">Complément d'adresse:</Label>
+        <Input type="text" id="address" name="address" value={formData.address} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
 
     </div>
 
-    <div className="grid w-full grid-cols-4 m-auto mt-10">
-      <div className="m-2">
-        <Label htmlFor="idCard">Carte d'Identité:</Label>
-        <Input type="file" id="idCard" name="idCard" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
-      </div>
-      <div className="m-2">
-        <Label htmlFor="rentReceipts">Quittances de Loyer:</Label>
-        <Input type="file" id="rentReceipts" name="rentReceipts" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
-      </div>
-      <div className="m-2">
-        <Label htmlFor="residenceCertificate">Certificat de Résidence:</Label>
-        <Input type="file" id="residenceCertificate" name="residenceCertificate" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
-      </div>
-      <div className="m-2">
-        <Label htmlFor="propertyTax">Taxe Foncière:</Label>
-        <Input type="file" id="propertyTax" name="propertyTax" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
-      </div>
-    </div>
+    <FileInputGroup>
+      <FileInput name="idCard" label="Carte d'Identité" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
+      <FileInput name="rentReceipts" label="Quittances de Loyer" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
+      <FileInput name="residenceCertificate" label="Certificat de Résidence" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
+      <FileInput name="propertyTax" label="Taxe Foncière" onChange={(e) => handleFileChange(e, formData.setPersonal)} />
+    </FileInputGroup>
   </div>
 );
 
-const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => (
-  <div>
-    <div>
-      <Label htmlFor="situation">Situation Professionnelle:</Label>
-      <Select value={formData.situation} onValueChange={(value) => handleInputChange({ target: { name: "situation", value } }, formData.setProfessional)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Sélectionnez une situation" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="CDD">CDD</SelectItem>
-          <SelectItem value="CDI">CDI</SelectItem>
-          <SelectItem value="étudiant">Étudiant</SelectItem>
-          <SelectItem value="indépendant">Indépendant</SelectItem>
-          <SelectItem value="retraité">Retraité</SelectItem>
-          <SelectItem value="autre">Autre</SelectItem>
-        </SelectContent>
-      </Select>
+const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => {
+  const isSituation = (targetSituation) => formData.situation === targetSituation;
+
+  return (
+    <div className="mb-20">
+
+      <h3 className="text-2xl font-semibold text-stone-600 mb-5">Situation Professionnelle</h3>
+
+      <LabelInputGroup>
+        <Label htmlFor="situation">Situation Professionnelle:</Label>
+        <Select value={formData.situation} onValueChange={(value) => handleInputChange({ target: { name: "situation", value } }, formData.setProfessional)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionnez une situation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CDD">CDD</SelectItem>
+            <SelectItem value="CDI">CDI</SelectItem>
+            <SelectItem value="étudiant">Étudiant</SelectItem>
+            <SelectItem value="indépendant">Indépendant</SelectItem>
+            <SelectItem value="retraité">Retraité</SelectItem>
+            <SelectItem value="autre">Autre</SelectItem>
+          </SelectContent>
+        </Select>
+      </LabelInputGroup>
+      {isSituation('autre') && (
+        <>
+          <div className="mt-5 mb-2">
+            <Label htmlFor="otherSituation">Décrivez votre situation:</Label>
+            <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
+          </div>
+          <div className="mt-5 mb-2">
+            <FileInput name="otherFile" label="Autres documents à transmettre" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+          </div>
+        </>
+      )}
+
+      {(isSituation('CDD') || isSituation('CDI')) && (
+        <FileInputGroup>
+          <FileInput name="lastPaySlips" label="3 Derniers Bulletins de Salaire" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+          <FileInput name="employementContract" label="Contrat de Travail" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </FileInputGroup>
+      )}
+
+      {isSituation('retraité') && (
+        <FileInputGroup>
+          <FileInput name="retirementCertificate" label="Justificatif de Pension Retraite" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </FileInputGroup>
+      )}
+
+      {isSituation('indépendant') && (
+        <FileInputGroup>
+          <FileInput name="kbisCertificate" label="Kbis" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+          <FileInput name="lastPaySlips" label="3 Derniers Bulletins de Salaire" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </FileInputGroup>
+      )}
+
+      {isSituation('étudiant') && (
+        <div className="mt-5 mb-2">
+          <FileInput name="schoolCertificate" label="Certificat de Scolarité" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
+        </div>
+      )}
+      
     </div>
-    {formData.situation === 'autre' && (
-      <>
-        <div className="mt-5">
-          <Label htmlFor="otherSituation">Décrivez votre situation:</Label>
-          <Input type="text" id="otherSituation" name="otherSituation" value={formData.otherSituation} onChange={(e) => handleInputChange(e, formData.setProfessional)} />
-        </div>
-        <div className="mt-5">
-          <Label htmlFor="otherFile">Autres documents à transmettre:</Label>
-          <Input type="file" id="otherFile" name="otherFile" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-        </div>
-      </>
-    )}
-    {(formData.situation === 'CDD' || formData.situation === 'CDI') && (
-      <>
-        <div className="mt-5">
-          <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
-          <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-        </div>
-        <div className="mt-5">
-          <Label htmlFor="employementContract">Contrat de Travail:</Label>
-          <Input type="file" id="employementContract" name="employementContract" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-        </div>
-      </>
-    )}
-    {formData.situation === 'retraité' && (
-      <div className="mt-5">
-        <Label htmlFor="retirementCertificate">Justificatif de Pension Retraite:</Label>
-        <Input type="file" id="retirementCertificate" name="retirementCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-      </div>
-    )}
-    {formData.situation === 'indépendant' && (
-      <>
-        <div className="mt-5">
-          <Label htmlFor="kbisCertificate">Kbis:</Label>
-          <Input type="file" id="kbisCertificate" name="kbisCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-        </div>
-        <div className="mt-5">
-          <Label htmlFor="lastPaySlips">3 Derniers Bulletins de Salaire:</Label>
-          <Input type="file" id="lastPaySlips" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-        </div>
-      </>
-    )}
-    {formData.situation === 'étudiant' && (
-      <div className="mt-5">
-        <Label htmlFor="schoolCertificate">Certificat de Scolarité:</Label>
-        <Input type="file" id="schoolCertificate" name="schoolCertificate" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 const GuarantorPage = ({ formData, handleFileChange }) => {
   const [selectedOption, setSelectedOption] = useState("");
 
+  const isOptionSelected = (targetOption) => selectedOption === targetOption;
+
   return (
-    <div>
-      <div>
+    <div className="mb-20">
+
+      <h3 className="text-2xl font-semibold text-stone-600 mb-5">Garant</h3>
+
+      <LabelInputGroup>
         <Label htmlFor="guarantorType">Type de Garant:</Label>
         <Select value={selectedOption} onValueChange={setSelectedOption}>
           <SelectTrigger>
@@ -148,28 +140,18 @@ const GuarantorPage = ({ formData, handleFileChange }) => {
             <SelectItem value="personnePhysique">Personne Physique</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </LabelInputGroup>
 
-      {selectedOption === "visale" ? (
-        <div>
-          <Label htmlFor="visaleCertificate">Attestation Visale:</Label>
-          <Input type="file" id="visaleCertificate" name="visaleCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-        </div>
-      ) : selectedOption === "personnePhysique" ? (
-        <>
-          <div>
-            <Label htmlFor="cardId">Carte d'Identité:</Label>
-            <Input type="file" id="cardId" name="cardId" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-          </div>
-          <div>
-            <Label htmlFor="lastPaySlipsGuarantor">3 Derniers Bulletins de Salaire:</Label>
-            <Input type="file" id="lastPaySlipsGuarantor" name="lastPaySlips" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-          </div>
-          <div>
-            <Label htmlFor="residenceCertificateGuarantor">Certificat de Résidence:</Label>
-            <Input type="file" id="residenceCertificateGuarantor" name="residenceCertificate" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
-          </div>
-        </>
+      {isOptionSelected("visale") ? (
+        <LabelInputGroup>
+          <FileInput name="visaleCertificate" label="Attestation Visale" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+        </LabelInputGroup>
+      ) : isOptionSelected("personnePhysique") ? (
+        <FileInputGroup>
+          <FileInput name="cardId" label="Carte d'Identité" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+          <FileInput name="lastPaySlipsGuarantor" label="3 Derniers Bulletins de Salaire" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+          <FileInput name="residenceCertificateGuarantor" label="Certificat de Résidence" onChange={(e) => handleFileChange(e, formData.setGuarantor)} />
+        </FileInputGroup>
       ) : null}
     </div>
   );
