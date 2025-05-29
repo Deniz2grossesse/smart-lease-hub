@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"; // Assurez-vous que le chemin est correct
-import { PersonalPage, ProfessionalPage, GuarantorPage } from "@/components/ui/tenant/TenantFormPages"; // Assurez-vous que le chemin est correct
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { PersonalPage, ProfessionalPage, GuarantorPage } from "@/components/ui/tenant/TenantFormPages";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
