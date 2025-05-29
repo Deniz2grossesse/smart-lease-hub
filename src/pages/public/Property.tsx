@@ -1,16 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import Logo from '@/components/layout/Logo';
-import { Layout } from 'lucide-react';
-import EnergyDiagnostic from '@/components/ui/property/EnergyDiagnostic';
 import TenantForm from '@/components/ui/tenant/TenantForm';
+import LocationContainer from '@/components/ui/property/LocationContainer';
+import PropertyHeader from '@/components/ui/property/PropertyHeader';
+import { Paragraph, ParagraphTitle, ParagraphContent } from '@/components/ui/property/Paragraph';
 
 const Property = () => {
   const { toast } = useToast();
@@ -30,8 +23,17 @@ const Property = () => {
     propertyState: "",
     dpeLetter: "A",
     gesLetter: "d",
-    address: "10 Charming Avenue, 75000 Paris",
-    stateControl: ""
+    address: "75000 Paris",
+    locationDescription: 'A côté de la tour Eiffel.',
+    propertyDescription: 'Niché dans le prestigieux 15ème arrondissement de Paris, à seulement quelques pas de la majestueuse tour Eiffel, est un véritable joyau immobilier. Ce bien meublé de 78m², réparti en 4 pièces spacieuses, a été construit en 2018 et se trouve au 1er étage, offrant ainsi une accessibilité optimale. Vous serez séduit par son balcon de 12m², idéal pour profiter des vues urbaines, ainsi que par ses deux places de garage, garantissant un stationnement facile et sécurisé. Avec une performance énergétique exceptionnelle classée A, cet appartement allie confort, modernité et efficacité énergétique, faisant de lui un choix de premier ordre pour une vie parisienne de rêve.',
+    stateControl: "",
+    images: [
+      "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg",
+      "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg",
+      "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg",
+      "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg",
+      "https://images.pexels.com/photos/271619/pexels-photo-271619.jpeg"
+    ]
   }
 
   const rentalData = {
@@ -56,108 +58,63 @@ const Property = () => {
     siretNumber: "123456789123"
   }
 
-  const images = [
-    "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg",
-    "https://images.pexels.com/photos/271619/pexels-photo-271619.jpeg"
-  ];
-
-  const tenantFormDataPersonnal = {
-    name: '',
-    lastname: '',
-    dateOfBirth: '',
-    address: '',
-    idCard: 'path/to/file',
-    rentReceipts: 'path/to/files',
-    residenceCertificate: 'path/to/files',
-    propertyTax: 'path/to/files'
-  }
-
-  const tenantFormDataProfessionnal = {
-    situation: '',
-    otherSituation: '',
-    otherFile: 'path/to/file',
-    lastPaySlips: 'path/to/file',
-    taxAssessmentNotice: 'path/to/file',
-    employementContract: 'path/to/file',
-    kbisCertificate: 'path/to/file',
-    retirementCertificate: 'path/to/file',
-  }
-
-  const tenantFormDataGuarantor = {
-    cardId: 'path/to/file',
-    lastPaySlips: 'path/to/file',
-    residenceCertificate: 'path/to/files',
-    visaleCertificate: 'path/to/file',
-  }
+  const images = propertyData.images;
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container p-4">
 
-      <div className="bg-white p-6">
+      <div className="w-full mt-0 md:mt-20 mb-20">
+        <PropertyHeader propertyData={propertyData} />
+      </div>
 
-        <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/2">
-            <img
-              src={propertyData.backgroundImage}
-              alt="Property"
-              className="w-full h-64 object-cover rounded-lg min-h-[40vh]"
-            />
-          </div>
+      <div className="p-6 sm:p-0 max-w-[920px] m-auto">
 
-          <div className="md:w-1/2 pl-8">
-            <h1 className="text-2xl font-bold mb-2">{propertyData.codeName}</h1>
-            <p className="text-gray-600 mb-4">{propertyData.type} - {propertyData.nature}</p>
-            <p className="text-gray-600 mb-4">{propertyData.rooms} pièces - {propertyData.size} m²</p>
-            <p className="text-gray-600 mb-4">{propertyData.floor}ème étage</p>
-            <p className="text-gray-600 mb-4">{propertyData.extra}</p>
-            <p className="text-gray-600 mb-4">Année de construction: {propertyData.buildYear}</p>
-          </div>
-        </div>
+        <Paragraph>
+          <ParagraphTitle>Présentation du bien</ParagraphTitle>
+          <ParagraphContent>{propertyData.propertyDescription}</ParagraphContent>
+        </Paragraph>
 
         <div className="mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {images.map((image, index) => (
-              <img key={index} src={image} alt={`Property ${index}`} className="w-full h-64 object-cover rounded-lg" />
+              <img key={index} src={image} alt={`Property ${index}`} className="w-full aspect-video object-cover rounded-lg" />
             ))}
           </div>
         </div>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Description de l'Appartement</h2>
-          <p className="text-gray-600 mb-4">
-            Cet appartement moderne de {propertyData.size} m² se situe au cœur de Paris, dans le 8ème arrondissement. Il comprend un salon lumineux, une cuisine équipée, deux chambres spacieuses, et une salle de bain. L'appartement est situé au {propertyData.floor}ème étage d'un immeuble sécurisé avec ascenseur. Il bénéficie d'une vue imprenable sur la ville et est proche de toutes les commodités (transports, commerces, écoles).
-          </p>
-        </div>
+        <Paragraph>
+          <ParagraphTitle>Caractéristiques du bien</ParagraphTitle>
+          <ParagraphContent>
+            {propertyData.extra}
+          </ParagraphContent>
+        </Paragraph>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Caractéristiques du Bien</h2>
-          <ul className="list-disc list-inside text-gray-600 mb-4">
-            <li>{propertyData.extra}</li>
-          </ul>
-        </div>
+        <Paragraph>
+          <ParagraphTitle>Informations sur le loueur</ParagraphTitle>
+          <ParagraphContent>
+            <ul>
+              <li>{agencyData.socialName}</li>
+              <li>Adresse: {agencyData.addressHeadquarters}</li>
+              <li>RCS: {agencyData.rcsNumber}</li>
+              <li>SIRET: {agencyData.siretNumber}</li>
+              <li>Garantie: {agencyData.guaranteeAmount} €</li>
+              <br />
+              <li>Montant: {rentalData.amount} € / mois</li>
+              <li>Charges: {rentalData.charges} € / mois</li>
+              <li>Total: {rentalData.total} € / mois</li>
+              <br />
+              <li>GLI: {rentalData.gli}</li>
+              <li>Frais de visite: {rentalData.fees.visit} €</li>
+              <li>Frais de dossier: {rentalData.fees.application} €</li>
+              <li>Frais de rédaction de bail: {rentalData.fees.leaseDrafting} €</li>
+              <li>Frais d'évaluation: {rentalData.fees.assessment} €</li>
+            </ul>
+          </ParagraphContent>
+        </Paragraph>
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Informations sur le Loueur</h2>
-          <p className="text-gray-600 mb-4">
-            {agencyData.socialName}<br />
-            Adresse: {agencyData.addressHeadquarters}<br />
-            RCS: {agencyData.rcsNumber}<br />
-            SIRET: {agencyData.siretNumber}<br />
-            Garantie: {agencyData.guaranteeAmount} €
-          </p>
-        </div>
+        <LocationContainer address={propertyData.address} description={propertyData.locationDescription} />
 
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Localisation et Environnement</h2>
-          <div className="w-full h-64 bg-gray-200 rounded-lg mb-4">
-            {/* Carte interactive ici */}
-          </div>
-          <p className="text-gray-600 mb-4">
-            Le quartier est très bien desservi par les transports en commun (métro, bus) et dispose de nombreux commerces de proximité, restaurants, et écoles. Le parc Monceau est à quelques minutes à pied.
-          </p>
-        </div>
-
-        <div id="formulaire">
+        <div className="mt-[15vh] md:hover:shadow-xl md:active:shadow-xl md:duration-200" id="formulaire">
           <TenantForm />
         </div>
 
