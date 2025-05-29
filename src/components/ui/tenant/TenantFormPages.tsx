@@ -30,16 +30,16 @@ const PersonalPage = ({ formData, handleInputChange, handleFileChange }) => (
       </LabelInputGroup>
 
       <LabelInputGroup>
+        <Label htmlFor="address">Complément d'adresse:</Label>
+        <Input type="text" id="address" name="address" value={formData.address.addressLine} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
+      </LabelInputGroup>
+      <LabelInputGroup>
         <Label htmlFor="address">Code Postal:</Label>
         <Input type="text" id="address" name="address" value={formData.address.postal} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
       </LabelInputGroup>
       <LabelInputGroup>
         <Label htmlFor="address">Ville:</Label>
         <Input type="text" id="address" name="address" value={formData.address.city} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
-      </LabelInputGroup>
-      <LabelInputGroup>
-        <Label htmlFor="address">Complément d'adresse:</Label>
-        <Input type="text" id="address" name="address" value={formData.address.addressLine} onChange={(e) => handleInputChange(e, formData.setPersonal)} />
       </LabelInputGroup>
 
     </div>
@@ -114,7 +114,7 @@ const ProfessionalPage = ({ formData, handleInputChange, handleFileChange }) => 
           <FileInput name="schoolCertificate" label="Certificat de Scolarité" onChange={(e) => handleFileChange(e, formData.setProfessional)} />
         </div>
       )}
-      
+
     </div>
   );
 };
