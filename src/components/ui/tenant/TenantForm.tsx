@@ -82,67 +82,24 @@ const TenantForm = () => {
     }
   };
 
-  const renderPageContent = () => {
-    switch (currentPage) {
-      case 1:
-        return <PersonalPage formData={{ ...tenantFormDataPersonnal, setPersonal: setTenantFormDataPersonnal }} handleInputChange={handleInputChange} handleFileChange={handleFileChange} />;
-      case 2:
-        return <ProfessionalPage formData={{ ...tenantFormDataProfessionnal, setProfessional: setTenantFormDataProfessionnal }} handleInputChange={handleInputChange} handleFileChange={handleFileChange} />;
-      case 3:
-        return <GuarantorPage formData={{ ...tenantFormDataGuarantor, setGuarantor: setTenantFormDataGuarantor }} handleFileChange={handleFileChange} />;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Card>
-
+    <Card className="p-5 max-w-[920px] m-auto">
       <CardHeader>
-        <CardTitle>Formulaire de candidatures</CardTitle>
+        <CardTitle className="text-3xl">Formulaire de candidatures</CardTitle>
         <CardDescription>Veuillez remplir les informations suivantes.</CardDescription>
       </CardHeader>
-
       <CardContent className="min-h-[50vh]">
-        {renderPageContent()}
+        <PersonalPage formData={{ ...tenantFormDataPersonnal, setPersonal: setTenantFormDataPersonnal }} handleInputChange={handleInputChange} handleFileChange={handleFileChange} />
+        <ProfessionalPage formData={{ ...tenantFormDataProfessionnal, setProfessional: setTenantFormDataProfessionnal }} handleInputChange={handleInputChange} handleFileChange={handleFileChange} />
+        <GuarantorPage formData={{ ...tenantFormDataGuarantor, setGuarantor: setTenantFormDataGuarantor }} handleFileChange={handleFileChange} />
       </CardContent>
-
       <CardFooter className="block">
-        <Pagination className="mb-10 mt-5">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious onClick={handlePrevious} />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink isActive={currentPage === 1} href="#" onClick={() => setCurrentPage(1)}>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink isActive={currentPage === 2} href="#" onClick={() => setCurrentPage(2)}>
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink isActive={currentPage === 3} href="#" onClick={() => setCurrentPage(3)}>
-                3
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext onClick={handleNext} />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-
         <div className="flex mb-5">
           <Checkbox id="checkbox" className="mr-3" onChange={handleCheckboxChange} />
           <Label htmlFor="checkbox">En soumettant ma candidature, j'affirme avoir lu les conditions d'utilisations et la politique des données privées</Label>
         </div>
-
         <Button type="submit" disabled={!isCheckboxChecked} className="block">Soumettre</Button>
-
       </CardFooter>
-
     </Card>
   );
 };
