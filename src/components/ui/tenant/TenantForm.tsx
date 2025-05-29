@@ -83,7 +83,7 @@ const TenantForm = () => {
   };
 
   return (
-    <Card className="p-5 max-w-[920px] m-auto">
+    <Card className="p-5 m-auto">
       <CardHeader>
         <CardTitle className="text-3xl">Formulaire de candidatures</CardTitle>
         <CardDescription>Veuillez remplir les informations suivantes.</CardDescription>
